@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 """
 
+::
+
+   GEOMETRY=zsph ipython -i ScanTest.py 
+
+
+
 """
 import os
 import numpy as np
@@ -101,7 +107,11 @@ def plot2d(st):
 if __name__ == '__main__':
 
 
-    solid = "sphe"
+    geometry = os.environ["GEOMETRY"]
+
+    solid = geometry
+
+    #solid = "sphe"
     #solid = "zsph"
     #solid = "cone"
     #solid = "vcub" 
