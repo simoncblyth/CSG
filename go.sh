@@ -1,10 +1,10 @@
 #!/bin/bash -l
 
 
-source ./build.sh 
+./build.sh 
 [ $? -ne 0 ] && exit 2
 
-source ./run.sh 
+./run.sh 
 [ $? -ne 0 ] && exit 3
 
 exit 0 

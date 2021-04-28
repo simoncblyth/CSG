@@ -12,7 +12,8 @@ cd $bdir && pwd
 
 
 glm-dir(){  echo $CSG_PREFIX/externals/glm/$(glm-name) ; }
-glm-version(){ echo 0.9.9.5 ; }
+#glm-version(){ echo 0.9.9.5 ; }
+glm-version(){ echo 0.9.9.8 ; }
 glm-name(){    echo glm-$(glm-version) ; }
 glm-url(){    echo https://github.com/g-truc/glm/releases/download/$(glm-version)/$(glm-name).zip ; }
 glm-dist(){    echo $(dirname $(glm-dir))/$(basename $(glm-url)) ; }
@@ -55,4 +56,5 @@ make
 make install   
 [ $? -ne 0 ] && echo $0 : install FAIL && exit 2
 
+exit 0
 

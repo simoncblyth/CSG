@@ -8,6 +8,8 @@ set(TEST_SOURCES
     CSGPrimTest.cc
     CSGSolidTest.cc
     CSGFoundryTest.cc
+
+    ScanTest.cc
 )
 
 

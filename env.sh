@@ -2,7 +2,8 @@
 
 sdir=$(pwd)
 name=CSG
-export CSG_PREFIX=/tmp/$USER/opticks/$name
+
+export CSG_PREFIX=/usr/local/csg
 export PATH=$CSG_PREFIX/lib:$PATH
 
 case $(uname) in

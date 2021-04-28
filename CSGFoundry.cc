@@ -12,7 +12,6 @@
 #include "CU.h"
 #include "NP.hh"
 #include "CSGFoundry.h"
-#include "Util.h"
 #include "AABB.h"
 
 

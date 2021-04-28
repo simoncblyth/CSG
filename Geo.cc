@@ -3,8 +3,6 @@
 #include <cstring>
 #include <vector_types.h>
 
-#include "Sys.h"
-#include "Util.h"
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -15,6 +13,7 @@
 #include "CSGPrim.h"
 #include "CSGFoundry.h"
 
+#include "Util.h"
 #include "Geo.h"
 #include "Grid.h"
 #include "InstanceId.h"

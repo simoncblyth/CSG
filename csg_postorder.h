@@ -60,7 +60,8 @@ This has several advantages:
 #else
 #define POSTORDER_DEPTH(currIdx) ( 32 - std::__clz((currIdx)) - 1 )
 #define TREE_HEIGHT(numNodes) ( ffs((numNodes) + 1) - 2)
-#define TREE_DEPTH(nodeIdx) ( 32 - std::__clz((nodeIdx)) - 1 )
+//#define TREE_DEPTH(nodeIdx) ( 32 - std::__clz((nodeIdx)) - 1 )
+#define TREE_DEPTH(nodeIdx) ( 32 - __builtin_clz((nodeIdx)) - 1 )
 #endif
 
 // see dev/csg/postorder.py 
