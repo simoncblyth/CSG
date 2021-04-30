@@ -44,6 +44,7 @@ list(APPEND HEADERS
     OpticksCSG.h
     CSGNode.h 
 
+    CU.h
     qat4.h
     CSGPrimSpec.h
     CSGPrim.h
