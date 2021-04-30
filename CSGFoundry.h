@@ -106,7 +106,7 @@ struct CSGFoundry
     unsigned getNumUniqueGAS() const ;
     unsigned getNumUniqueINS() const ;
     unsigned getNumInstancesIAS(unsigned ias_idx) const ;
-    void     getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx );
+    void     getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx ) const ;
 
     unsigned            imax ; 
 

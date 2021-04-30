@@ -856,7 +856,7 @@ unsigned CSGFoundry::getNumInstancesIAS(unsigned ias_idx) const
     return qat4::count_ias(inst, ias_idx );  
 }
 
-void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx )
+void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx ) const 
 {
     qat4::select_instances_ias(inst, ias_inst, ias_idx ) ;
 }
