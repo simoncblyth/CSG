@@ -19,6 +19,10 @@ Can Foundry replace Geo ?
 * no foundry is for now just for making local solids 
   and holding the constituent Node, Prim etc..
 
+Geo is for high level definition of specific examples of geometry, 
+it is fine as a test of the CSG model but it definitely does not belong 
+in the model package.
+
 **/
 
 struct Geo

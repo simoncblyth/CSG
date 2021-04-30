@@ -18,6 +18,7 @@ include_directories(
 
 set(SOURCES)
 set(HEADERS)
+set(INTERSECT_HEADERS)
 
 
 list(APPEND SOURCES
@@ -60,10 +61,22 @@ list(APPEND HEADERS
     Geo.h
 )
 
+list(APPEND INTERSECT_HEADERS
+    csg_intersect_node.h 
+    csg_intersect_tree.h 
+    csg_robust_quadratic_roots.h
+    csg_classify.h
+    csg_pack.h
+    csg_stack.h
+    csg_tranche.h
+    csg_error.h
+    csg_postorder.h
+)
 
-#[=[
+list(APPEND CUDA_HEADERS
+    CUDA_CHECK.h
+)
 
-#]=]
 
 message(STATUS "CMAKE_INSTALL_PREFIX     : ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_INSTALL_INCLUDEDIR : ${CMAKE_INSTALL_INCLUDEDIR}")
@@ -85,7 +98,7 @@ target_include_directories(${name}
 
 
 
-install(FILES ${HEADERS}  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${HEADERS} ${INTERSECT_HEADERS} ${CUDA_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 add_subdirectory(tests)
 
 

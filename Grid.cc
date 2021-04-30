@@ -56,7 +56,7 @@ const float4 Grid::center_extent() const
     float3 mn = gridscale*make_float3( float(imn.x), float(imn.y), float(imn.z) ) ;
     float3 mx = gridscale*make_float3( float(imx.x), float(imx.y), float(imx.z) ) ;
 
-    // hmm this does not accomodat the bbox of the item, just the grid 
+    // hmm this does not accomodat the bbox of the item, just the grid centers of the items
     AABB bb = { mn, mx }; 
     float4 ce = bb.center_extent(); 
 

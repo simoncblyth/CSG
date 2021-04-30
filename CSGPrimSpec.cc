@@ -7,6 +7,15 @@
 #include "CSGPrimSpec.h"
 
 
+/**
+CSGPrimSpec::gather
+---------------------
+
+Writes num_prim*6 bbox floats into out. 
+
+**/
+
+
 void CSGPrimSpec::gather(std::vector<float>& out) const 
 {
     assert( device == false ); 
