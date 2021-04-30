@@ -181,7 +181,7 @@ struct qat4
          }
     } 
 
-    static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned q_ias_idx )
+    static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned ias_idx_ )
     {
         unsigned count = 0 ; 
         for(unsigned i=0 ; i < qv.size() ; i++)
@@ -189,10 +189,24 @@ struct qat4
             const qat4& q = qv[i] ; 
             unsigned ins_idx,  gas_idx, ias_idx ; 
             q.getIdentity(ins_idx,  gas_idx, ias_idx);  
-            if( q_ias_idx == ias_idx ) count += 1 ;
+            if( ias_idx_ == ias_idx ) count += 1 ;
         }
         return count ; 
     }
+
+
+    static QAT4_METHOD void select_instances_ias(const std::vector<qat4>& qv, std::vector<qat4>& select_qv, unsigned ias_idx_ )
+    {
+        for(unsigned i=0 ; i < qv.size() ; i++)
+        {
+            const qat4& q = qv[i] ; 
+            unsigned ins_idx,  gas_idx, ias_idx ; 
+            q.getIdentity(ins_idx,  gas_idx, ias_idx );  
+            if( ias_idx_ == ias_idx ) select_qv.push_back(q) ;
+        }
+    }
+
+
 
 #endif
 

@@ -59,10 +59,6 @@ void Grid::init()
     unsigned num_solid_modulo = solid_modulo.size() ; 
     unsigned num_solid_single = solid_single.size() ; 
 
-    // check the input solid_idx are valid 
-    for(unsigned i=0 ; i < num_solid_modulo ; i++ ) assert(solid_modulo[i] < num_solid) ; 
-    for(unsigned i=0 ; i < num_solid_single ; i++ ) assert(solid_single[i] < num_solid) ; 
-
     std::cout 
         << "Grid::init"
         << " num_solid_modulo " << num_solid_modulo
@@ -70,6 +66,10 @@ void Grid::init()
         << " num_solid " << num_solid
         << std::endl
         ;
+
+    // check the input solid_idx are valid 
+    for(unsigned i=0 ; i < num_solid_modulo ; i++ ) assert(solid_modulo[i] < num_solid) ; 
+    for(unsigned i=0 ; i < num_solid_single ; i++ ) assert(solid_single[i] < num_solid) ; 
 
     for(int i=0 ; i < int(num_solid_single) ; i++)
     {

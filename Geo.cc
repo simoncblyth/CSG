@@ -3,11 +3,7 @@
 #include <cstring>
 #include <vector_types.h>
 
-//#include <glm/glm.hpp>
-//#include "glm/gtc/matrix_transform.hpp"
-
 #include "NP.hh"
-
 #include "sutil_vec_math.h"
 
 #include "CSGPrim.h"
@@ -16,7 +12,6 @@
 #include "Util.h"
 #include "Geo.h"
 #include "Grid.h"
-//#include "InstanceId.h"
 
 Geo::Geo(CSGFoundry* foundry_)
     :
@@ -108,14 +103,9 @@ void Geo::init_sphere_containing_grid_of_spheres(float& tminf, float& tmaxf, uns
 {
     std::cout << "Geo::init_sphere_containing_grid_of_spheres : layers " << layers << std::endl ; 
 
-    unsigned ias_idx = 0 ; //grids.size(); 
+    unsigned ias_idx = 0 ; 
     unsigned num_solid = 3 ; 
-
     const float4 ce = Grid::AddInstances(foundry, ias_idx, num_solid) ; 
-
-    //Grid* grid = new Grid(foundry, ias_idx, num_solid) ; 
-    //addGrid(grid); 
-    //float4 ce = grid->center_extent();  
 
     float big_radius = float(ce.w)*sqrtf(3.f) ;
     std::cout << " big_radius " << big_radius << std::endl ; 
@@ -137,12 +127,8 @@ void Geo::init_parade(float& tminf, float& tmaxf )
     foundry->makeDemoSolids();  
     unsigned num_solid = foundry->getNumSolid() ; 
 
-    unsigned ias_idx = 0 ; //grids.size(); 
-
+    unsigned ias_idx = 0 ; 
     const float4 ce = Grid::AddInstances( foundry, ias_idx, num_solid ); 
-
-    //Grid* grid = new Grid(foundry, ias_idx, num_solid) ; 
-    //addGrid(grid); 
 
     top = strdup("i0") ; 
     setCenterExtent(ce); 
@@ -173,7 +159,6 @@ void Geo::init_clustered(const char* name, float& tminf, float& tmaxf )
         << std::endl
         ; 
 
-
     bool inbox = false ; 
     std::array<int,9> cl ; 
     Util::ParseGridSpec(cl, clusterspec.c_str()); // string parsed into array of 9 ints 
@@ -186,7 +171,6 @@ void Geo::init_clustered(const char* name, float& tminf, float& tmaxf )
     tminf = 1.60f ;  
     tmaxf = 10000.f ; 
 }
-
 
 void Geo::init_layered(const char* name, float& tminf, float& tmaxf, unsigned layers)
 {
@@ -215,7 +199,6 @@ std::string Geo::desc() const
 {
     std::stringstream ss ; 
     ss << "Geo " ;
-    // << " grids:" << grids.size() ; 
     std::string s = ss.str(); 
     return s ; 
 }
@@ -230,28 +213,6 @@ const CSGSolid*    Geo::getSolid(         unsigned solidIdx) const { return foun
 CSGPrimSpec        Geo::getPrimSpec(      unsigned solidIdx) const { return foundry->getPrimSpec(solidIdx);  }
 const CSGPrim*     Geo::getPrim(          unsigned primIdx) const  { return foundry->getPrim(primIdx);  }
 
-
-
-/*
-void Geo::addGrid(const Grid* grid)
-{
-    grids.push_back(grid); 
-}
-unsigned Geo::getNumGrid() const 
-{
-    return grids.size() ; 
-}
-const Grid* Geo::getGrid_(int gridIdx_) const
-{
-    unsigned gridIdx = gridIdx_ < 0 ? grids.size() + unsigned(gridIdx_) : unsigned(gridIdx_) ;  
-    return getGrid(gridIdx);  
-}
-const Grid* Geo::getGrid(unsigned gridIdx) const
-{
-    assert( gridIdx < grids.size() );
-    return grids[gridIdx] ; 
-}
-*/
 
 
 void Geo::write(const char* dir) const 
