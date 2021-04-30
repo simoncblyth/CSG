@@ -3,8 +3,8 @@
 #include <cstring>
 #include <vector_types.h>
 
-#include <glm/glm.hpp>
-#include "glm/gtc/matrix_transform.hpp"
+//#include <glm/glm.hpp>
+//#include "glm/gtc/matrix_transform.hpp"
 
 #include "NP.hh"
 
@@ -16,7 +16,7 @@
 #include "Util.h"
 #include "Geo.h"
 #include "Grid.h"
-#include "InstanceId.h"
+//#include "InstanceId.h"
 
 Geo::Geo(CSGFoundry* foundry_)
     :
@@ -108,12 +108,15 @@ void Geo::init_sphere_containing_grid_of_spheres(float& tminf, float& tmaxf, uns
 {
     std::cout << "Geo::init_sphere_containing_grid_of_spheres : layers " << layers << std::endl ; 
 
-    unsigned ias_idx = grids.size(); 
+    unsigned ias_idx = 0 ; //grids.size(); 
     unsigned num_solid = 3 ; 
-    Grid* grid = new Grid(ias_idx, num_solid) ; 
-    addGrid(grid); 
 
-    float4 ce = grid->center_extent();  
+    const float4 ce = Grid::AddInstances(foundry, ias_idx, num_solid) ; 
+
+    //Grid* grid = new Grid(foundry, ias_idx, num_solid) ; 
+    //addGrid(grid); 
+    //float4 ce = grid->center_extent();  
+
     float big_radius = float(ce.w)*sqrtf(3.f) ;
     std::cout << " big_radius " << big_radius << std::endl ; 
 
@@ -134,12 +137,15 @@ void Geo::init_parade(float& tminf, float& tmaxf )
     foundry->makeDemoSolids();  
     unsigned num_solid = foundry->getNumSolid() ; 
 
-    unsigned ias_idx = grids.size(); 
-    Grid* grid = new Grid(ias_idx, num_solid) ; 
-    addGrid(grid); 
+    unsigned ias_idx = 0 ; //grids.size(); 
+
+    const float4 ce = Grid::AddInstances( foundry, ias_idx, num_solid ); 
+
+    //Grid* grid = new Grid(foundry, ias_idx, num_solid) ; 
+    //addGrid(grid); 
 
     top = strdup("i0") ; 
-    setCenterExtent(grid->center_extent()); 
+    setCenterExtent(ce); 
 
     tminf = 0.75f ;   
     tmaxf = 10000.f ; 
@@ -208,7 +214,8 @@ void Geo::init(const char* name, float& tminf, float& tmaxf )
 std::string Geo::desc() const
 {
     std::stringstream ss ; 
-    ss << "Geo " << " grids:" << grids.size() ; 
+    ss << "Geo " ;
+    // << " grids:" << grids.size() ; 
     std::string s = ss.str(); 
     return s ; 
 }
@@ -217,15 +224,15 @@ void Geo::setCenterExtent(const float4&  center_extent_){ center_extent = center
 float4 Geo::getCenterExtent() const  { return center_extent ;  }
 
 
-unsigned        Geo::getNumSolid() const {                        return foundry->getNumSolid() ;      }
-unsigned        Geo::getNumPrim() const {                         return foundry->getNumPrim() ;      }
-
+unsigned        Geo::getNumSolid() const {                           return foundry->getNumSolid() ;      }
+unsigned        Geo::getNumPrim() const {                            return foundry->getNumPrim() ;      }
 const CSGSolid*    Geo::getSolid(         unsigned solidIdx) const { return foundry->getSolid(solidIdx);  }
 CSGPrimSpec        Geo::getPrimSpec(      unsigned solidIdx) const { return foundry->getPrimSpec(solidIdx);  }
 const CSGPrim*     Geo::getPrim(          unsigned primIdx) const  { return foundry->getPrim(primIdx);  }
 
 
 
+/*
 void Geo::addGrid(const Grid* grid)
 {
     grids.push_back(grid); 
@@ -244,6 +251,8 @@ const Grid* Geo::getGrid(unsigned gridIdx) const
     assert( gridIdx < grids.size() );
     return grids[gridIdx] ; 
 }
+*/
+
 
 void Geo::write(const char* dir) const 
 {
@@ -252,9 +261,9 @@ void Geo::write(const char* dir) const
     NP uspec("<u4", 5); 
     unsigned* u = uspec.values<unsigned>() ; 
     *(u+0) = getNumSolid(); 
-    *(u+1) = getNumGrid(); 
-    *(u+2) = InstanceId::ins_bits ; 
-    *(u+3) = InstanceId::gas_bits ; 
+    *(u+1) = 0 ; //getNumGrid(); 
+    *(u+2) = 0 ; //InstanceId::ins_bits ; 
+    *(u+3) = 0 ; //InstanceId::gas_bits ; 
     *(u+4) = Util::Encode4(top) ; 
     uspec.save(dir, "uspec.npy"); 
 
@@ -266,14 +275,7 @@ void Geo::write(const char* dir) const
     *(f+3) = center_extent.w ; 
     fspec.save(dir, "fspec.npy"); 
 
-
-    // with foundry it makes more sense to write everything at once, not individual solids
+    // with foundry write everything at once, not individual solids/grids
     foundry->write(dir, "foundry"); 
 
-    unsigned num_grid = getNumGrid(); 
-    for(unsigned i=0 ; i < num_grid ; i++) 
-    {
-        const Grid* gr = getGrid(i); 
-        gr->write(dir,"grid", i); 
-    }
 }

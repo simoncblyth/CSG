@@ -10,7 +10,7 @@ struct CSGSolid ;
 struct CSGPrim ; 
 struct CSGFoundry ; 
 
-struct Grid ; 
+//struct Grid ; 
 
 
 /**
@@ -45,11 +45,12 @@ struct Geo
     CSGPrimSpec getPrimSpec(unsigned solidIdx) const ;
     const CSGPrim* getPrim(unsigned primIdx) const ; 
 
+/*
     unsigned getNumGrid() const ; 
     const Grid*  getGrid(unsigned gridIdx) const ; 
     const Grid*  getGrid_(int gridIdx) const ; 
-
     void addGrid(const Grid* grid) ;
+*/
 
     void write(const char* prefix) const ; 
     void setCenterExtent(const float4& center_extent); 
@@ -60,7 +61,7 @@ struct Geo
     float4 center_extent = {0.f, 0.f, 0.f, 100.f} ; 
 
     CSGFoundry*               foundry ; 
-    std::vector<const Grid*>  grids ; 
+//    std::vector<const Grid*>  grids ; 
     const char*               top ;  
 
 };

@@ -47,19 +47,21 @@ struct CSGFoundry
     unsigned getNumPlan() const;
     unsigned getNumTran() const;
     unsigned getNumItra() const;
+    unsigned getNumInst() const;
 
     const CSGSolid*   getSolid(unsigned solidIdx) const ;  
     const CSGPrim*    getPrim(unsigned primIdx) const ;    
     const CSGNode*    getNode(unsigned nodeIdx) const ;
-    const float4*  getPlan(unsigned planIdx) const ;
-    const qat4*    getTran(unsigned tranIdx) const ;
-    const qat4*    getItra(unsigned itraIdx) const ;
+    const float4*     getPlan(unsigned planIdx) const ;
+    const qat4*       getTran(unsigned tranIdx) const ;
+    const qat4*       getItra(unsigned itraIdx) const ;
+    const qat4*       getInst(unsigned instIdx) const ;
 
     CSGSolid* addSolid(unsigned num_prim, const char* label );
     CSGPrim*  addPrim(int num_node) ;
     CSGNode*  addNode(CSGNode nd, const std::vector<float4>* pl=nullptr );
     CSGNode*  addNodes(const std::vector<CSGNode>& nds );
-    float4* addPlan(const float4& pl );
+    float4*   addPlan(const float4& pl );
 
     template<typename T> unsigned addTran( const Tran<T>& tr  );
 
@@ -98,15 +100,23 @@ struct CSGFoundry
 
     void write(const char* base, const char* rel) const ;
     void upload();
+    void inst_find_unique(); 
+
+    unsigned getNumUniqueIAS() const ;
+    unsigned getNumUniqueGAS() const ;
+    unsigned getNumUniqueINS() const ;
+    unsigned getNumInstancesIAS(unsigned ias_idx) const ;
+
 
     unsigned            imax ; 
 
     std::vector<CSGSolid>  solid ;   
     std::vector<CSGPrim>   prim ; 
     std::vector<CSGNode>   node ; 
-    std::vector<float4> plan ; 
-    std::vector<qat4>   tran ;  
-    std::vector<qat4>   itra ;  
+    std::vector<float4>    plan ; 
+    std::vector<qat4>      tran ;  
+    std::vector<qat4>      itra ;  
+    std::vector<qat4>      inst ;  
 
     CSGSolid*   d_solid ; 
     CSGPrim*    d_prim ; 
@@ -114,6 +124,14 @@ struct CSGFoundry
     float4*  d_plan ; 
     qat4*    d_tran ; 
     qat4*    d_itra ; 
+
+
+    std::vector<unsigned>  ins ; 
+    std::vector<unsigned>  gas ; 
+    std::vector<unsigned>  ias ; 
+
+
+
 };
 
 

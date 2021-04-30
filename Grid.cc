@@ -2,34 +2,24 @@
 #include <sstream>
 #include <iostream>
 #include "NP.hh"
-#include "Sys.h"
+
 #include "Util.h"
+
 #include "Grid.h"
+#include "CSGFoundry.h"
 #include "InstanceId.h"
 #include "AABB.h"
 
-#include <glm/gtx/transform.hpp>
 
+float4 Grid::AddInstances( CSGFoundry* foundry_, unsigned ias_idx_, unsigned num_solid_ )  // static 
+{
+    Grid gr(foundry_, ias_idx_, num_solid_ ); 
+    return gr.center_extent(); 
+} 
 
-/**
-Geo::makeGrid
----------------
-
-shape_modulo
-    vector of gas_idx which are modulo cycled in a 3d grid array  
-
-shape_single
-    vector of gas_idx which are singly included into the IAS 
-    with an identity transform
-
-Create vector of transfoms and creat IAS from that.
-Currently a 3D grid of translate transforms with all available GAS repeated modulo
-
-**/
-
-
-Grid::Grid( unsigned ias_idx_, unsigned num_solid_ )
+Grid::Grid( CSGFoundry* foundry_, unsigned ias_idx_, unsigned num_solid_ )
     :
+    foundry(foundry_),
     ias_idx(ias_idx_),
     num_solid(num_solid_),
     gridscale(Util::GetEValue<float>("GRIDSCALE", 1.f))
@@ -44,8 +34,9 @@ Grid::Grid( unsigned ias_idx_, unsigned num_solid_ )
     std::cout << "GRIDMODULO " << Util::Present(solid_modulo) << std::endl ; 
     std::cout << "GRIDSINGLE " << Util::Present(solid_single) << std::endl ; 
 
-    init(); 
+    init();   // add qat4 instances to foundry 
 }
+
 
 const float4 Grid::center_extent() const 
 {
@@ -62,15 +53,6 @@ const float4 Grid::center_extent() const
 
     return ce ; 
 }
-
-std::string Grid::desc() const 
-{
-    std::stringstream ss ; 
-    ss << "Grid center_extent " << center_extent() << " num_tr " << trs.size() ; 
-    std::string s = ss.str(); 
-    return s; 
-}
-
 
 void Grid::init()
 {
@@ -91,58 +73,30 @@ void Grid::init()
 
     for(int i=0 ; i < int(num_solid_single) ; i++)
     {
-        unsigned ins_idx = trs.size() ;        // 0-based index within the Grid
-        unsigned gas_idx = solid_single[i] ;   // 0-based solid index
-        unsigned id = InstanceId::Encode( ins_idx, gas_idx ); 
-
-        glm::mat4 tr(1.f) ;  // identity transform for the large sphere 
-        tr[0][3] = Sys::unsigned_as_float(id); 
-        tr[1][3] = Sys::unsigned_as_float(0) ;
-        tr[2][3] = Sys::unsigned_as_float(0) ;   
-        tr[3][3] = Sys::unsigned_as_float(0) ;   
-
-        trs.push_back(tr); 
+        unsigned ins_idx = foundry->inst.size() ; // 0-based index within the Grid
+        unsigned gas_idx = solid_single[i] ;      // 0-based solid index
+        qat4 instance  ; 
+        instance.setIdentity( ins_idx, gas_idx, ias_idx ); 
+        foundry->inst.push_back( instance ); 
     }
 
     for(int i=grid[0] ; i < grid[1] ; i+=grid[2] ){
     for(int j=grid[3] ; j < grid[4] ; j+=grid[5] ){
     for(int k=grid[6] ; k < grid[7] ; k+=grid[8] ){
 
-        glm::vec3 tlat(i*gridscale,j*gridscale,k*gridscale) ;  // grid translation 
-        glm::mat4 tr(1.f) ;
-        tr = glm::translate(tr, tlat );
-
-        unsigned ins_idx = trs.size() ;     
+        qat4 instance  ; 
+        instance.q3.f.x = float(i)*gridscale ; 
+        instance.q3.f.y = float(j)*gridscale ; 
+        instance.q3.f.z = float(k)*gridscale ; 
+       
+        unsigned ins_idx = foundry->inst.size() ;     
         unsigned solid_modulo_idx = ins_idx % num_solid_modulo ; 
         unsigned gas_idx = solid_modulo[solid_modulo_idx] ; 
-        unsigned id = InstanceId::Encode( ins_idx, gas_idx ); 
 
-        tr[0][3] = Sys::unsigned_as_float(id); 
-        tr[1][3] = Sys::unsigned_as_float(0) ;
-        tr[2][3] = Sys::unsigned_as_float(0) ;   
-        tr[3][3] = Sys::unsigned_as_float(0) ;   
-
-        trs.push_back(tr); 
+        instance.setIdentity( ins_idx, gas_idx, ias_idx ); 
+        foundry->inst.push_back( instance ); 
     }
     }
     }
 }
-
-
-void Grid::write(const char* base, const char* rel, unsigned idx ) const 
-{
-    std::stringstream ss ;   
-    ss << base << "/" << rel << "/" << idx << "/" ; 
-    std::string dir = ss.str();   
-
-    std::cout 
-        << "Grid::write "
-        << " trs.size " << trs.size()
-        << " dir " << dir
-        << std::endl 
-        ;
-
-    NP::Write(dir.c_str(), "grid.npy", (float*)trs.data(),  trs.size(), 4, 4 ); 
-}
-
 

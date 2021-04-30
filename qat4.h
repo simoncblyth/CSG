@@ -12,6 +12,8 @@
 #else
    #include <iostream>
    #include <iomanip>
+   #include <vector>
+   #include <algorithm>
 #endif 
 
 #include "Quad.h"
@@ -55,6 +57,33 @@ struct qat4
         v.z = z ; 
     }
 
+    /**
+           x  y  z  w 
+      q0   0  4  8  - 
+      q1   1  5  9  -
+      q2   2  6 10  -
+      q3   3  7 11  -
+
+    **/ 
+    QAT4_METHOD void copy_columns_3x4( float* dst ) const 
+    {
+         dst[0]  = q0.f.x ; 
+         dst[1]  = q1.f.x ; 
+         dst[2]  = q2.f.x ; 
+         dst[3]  = q3.f.x ; 
+
+         dst[4]  = q0.f.y ; 
+         dst[5]  = q1.f.y ; 
+         dst[6]  = q2.f.y ; 
+         dst[7]  = q3.f.y ; 
+
+         dst[8]  = q0.f.z ; 
+         dst[9]  = q1.f.z ; 
+         dst[10] = q2.f.z ; 
+         dst[11] = q3.f.z ; 
+    }
+
+
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
     QAT4_METHOD qat4() 
@@ -78,17 +107,18 @@ struct qat4
         q2.f.x = float(*(v+8))  ;  q2.f.y = float(*(v+9))  ;   q2.f.z = float(*(v+10)) ;  q2.f.w = float(*(v+11)) ;   
         q3.f.x = float(*(v+12)) ;  q3.f.y = float(*(v+13)) ;   q3.f.z = float(*(v+14)) ;  q3.f.w = float(*(v+15)) ;   
     } 
-    QAT4_METHOD void prep() // prepare for matrix multiply by clearing any auxiliary info in the "spare" 4th column 
-    {
-        q0.f.w = 0.f ; 
-        q1.f.w = 0.f ; 
-        q2.f.w = 0.f ; 
-        q3.f.w = 1.f ; 
-    }
+
     QAT4_METHOD float* data() 
     {
         return &q0.f.x ;
     }
+
+    QAT4_METHOD const float* cdata() const 
+    {
+        return &q0.f.x ;
+    }
+
+
 
     QAT4_METHOD void transform_aabb_inplace( float* aabb ) const 
     {
@@ -117,6 +147,53 @@ struct qat4
         *(aabb + 4) = tma.y ; 
         *(aabb + 5) = tma.z ; 
     }
+
+    QAT4_METHOD void getIdentity(unsigned& ins_idx, unsigned& gas_idx, unsigned& ias_idx ) const 
+    {
+        ins_idx = q0.u.w - 1u ; 
+        gas_idx = q1.u.w - 1u ; 
+        ias_idx = q2.u.w - 1u ; 
+    }
+    QAT4_METHOD void setIdentity(unsigned ins_idx, unsigned gas_idx, unsigned ias_idx )
+    {
+        q0.u.w = ins_idx + 1u ; 
+        q1.u.w = gas_idx + 1u ; 
+        q2.u.w = ias_idx + 1u ; 
+    }
+    QAT4_METHOD void clearIdentity() // prepare for matrix multiply by clearing any auxiliary info in the "spare" 4th column 
+    {
+        q0.f.w = 0.f ; 
+        q1.f.w = 0.f ; 
+        q2.f.w = 0.f ; 
+        q3.f.w = 1.f ; 
+    }
+
+    static QAT4_METHOD void find_unique(const std::vector<qat4>& qv, std::vector<unsigned>& ins, std::vector<unsigned>& gas, std::vector<unsigned>& ias) 
+    {
+         for(unsigned i=0 ; i < qv.size() ; i++)
+         {
+             const qat4& q = qv[i] ; 
+             unsigned ins_idx,  gas_idx, ias_idx ; 
+             q.getIdentity(ins_idx,  gas_idx, ias_idx);  
+             if(std::find(ins.begin(), ins.end(), ins_idx) == ins.end() ) ins.push_back(ins_idx); 
+             if(std::find(gas.begin(), gas.end(), gas_idx) == gas.end() ) gas.push_back(gas_idx); 
+             if(std::find(ias.begin(), ias.end(), ias_idx) == ias.end() ) ias.push_back(ias_idx); 
+         }
+    } 
+
+    static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned q_ias_idx )
+    {
+        unsigned count = 0 ; 
+        for(unsigned i=0 ; i < qv.size() ; i++)
+        {
+            const qat4& q = qv[i] ; 
+            unsigned ins_idx,  gas_idx, ias_idx ; 
+            q.getIdentity(ins_idx,  gas_idx, ias_idx);  
+            if( q_ias_idx == ias_idx ) count += 1 ;
+        }
+        return count ; 
+    }
+
 #endif
 
 }; 

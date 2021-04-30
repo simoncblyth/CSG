@@ -2,7 +2,6 @@
 
 #include <array>
 #include <vector>
-#include <glm/glm.hpp>
 
 /**
 Grid
@@ -23,8 +22,14 @@ The foundry is central to the CSG model.
 
 **/
 
+struct CSGFoundry ; 
+
+
 struct Grid
 { 
+    static float4 AddInstances( CSGFoundry* foundry_, unsigned ias_idx_, unsigned num_solid_ ); 
+
+    CSGFoundry*            foundry ; 
     unsigned               ias_idx ; 
     unsigned               num_solid ; 
     float                  gridscale ; 
@@ -32,15 +37,12 @@ struct Grid
     std::array<int,9>      grid ; 
     std::vector<unsigned>  solid_modulo ;  
     std::vector<unsigned>  solid_single ;  
-    std::vector<glm::mat4> trs ;  
 
-    Grid(unsigned ias_idx, unsigned num_solid);
-
+    Grid(CSGFoundry* foundry, unsigned ias_idx, unsigned num_solid);
     const float4 center_extent() const ;
-    std::string desc() const ;
 
     void init(); 
-    void write(const char* base, const char* rel, unsigned idx ) const ;
+
 };
 
 

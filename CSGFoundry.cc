@@ -181,13 +181,15 @@ unsigned CSGFoundry::getNumNode() const  { return node.size(); }
 unsigned CSGFoundry::getNumPlan() const  { return plan.size(); }
 unsigned CSGFoundry::getNumTran() const  { return tran.size(); }
 unsigned CSGFoundry::getNumItra() const  { return itra.size(); }
+unsigned CSGFoundry::getNumInst() const  { return inst.size(); }
 
 const CSGSolid*  CSGFoundry::getSolid(unsigned solidIdx) const { return solidIdx < solid.size() ? solid.data() + solidIdx  : nullptr ; } 
 const CSGPrim*   CSGFoundry::getPrim(unsigned primIdx)   const { return primIdx  < prim.size()  ? prim.data()  + primIdx  : nullptr ; } 
 const CSGNode*   CSGFoundry::getNode(unsigned nodeIdx)   const { return nodeIdx  < node.size()  ? node.data()  + nodeIdx  : nullptr ; }  
-const float4* CSGFoundry::getPlan(unsigned planIdx)   const { return planIdx  < plan.size()  ? plan.data()  + planIdx  : nullptr ; }
-const qat4*   CSGFoundry::getTran(unsigned tranIdx)   const { return tranIdx  < tran.size()  ? tran.data()  + tranIdx  : nullptr ; }
-const qat4*   CSGFoundry::getItra(unsigned itraIdx)   const { return itraIdx  < itra.size()  ? itra.data()  + itraIdx  : nullptr ; }
+const float4*    CSGFoundry::getPlan(unsigned planIdx)   const { return planIdx  < plan.size()  ? plan.data()  + planIdx  : nullptr ; }
+const qat4*      CSGFoundry::getTran(unsigned tranIdx)   const { return tranIdx  < tran.size()  ? tran.data()  + tranIdx  : nullptr ; }
+const qat4*      CSGFoundry::getItra(unsigned itraIdx)   const { return itraIdx  < itra.size()  ? itra.data()  + itraIdx  : nullptr ; }
+const qat4*      CSGFoundry::getInst(unsigned instIdx)   const { return instIdx  < inst.size()  ? inst.data()  + instIdx  : nullptr ; }
 
 
 const CSGSolid*  CSGFoundry::getSolid_(int solidIdx_) const { 
@@ -783,41 +785,79 @@ void CSGFoundry::write(const char* base, const char* rel) const
 
     std::cout << "CSGFoundry::write " << dir << std::endl ; 
 
-    NP::Write(dir.c_str(), "solid.npy",    (int*)solid.data(), solid.size(), 4 ); 
-    NP::Write(dir.c_str(), "prim.npy",   (float*)prim.data(), prim.size(), 4, 3 ); 
-    NP::Write(dir.c_str(), "node.npy",   (float*)node.data(), node.size(), 4, 4 ); 
-    NP::Write(dir.c_str(), "plan.npy",   (float*)plan.data(), plan.size(), 4 ); 
-    NP::Write(dir.c_str(), "tran.npy",   (float*)tran.data(), tran.size(), 4, 4 ); 
-    NP::Write(dir.c_str(), "itra.npy",   (float*)itra.data(), itra.size(), 4, 4 ); 
+    NP::Write(dir.c_str(), "solid.npy",  (int*)solid.data(),  solid.size(),  4, 2 ); 
+    NP::Write(dir.c_str(), "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
+    NP::Write(dir.c_str(), "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
+    NP::Write(dir.c_str(), "plan.npy",   (float*)plan.data(), plan.size(),   4    ); 
+    NP::Write(dir.c_str(), "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
+    NP::Write(dir.c_str(), "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
+
+    unsigned num_inst = inst.size(); 
+    if( num_inst > 0 )
+    NP::Write(dir.c_str(), "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
 }
 
 void CSGFoundry::upload()
 {
-    unsigned num_solid = solid.size(); 
-    unsigned num_prim = prim.size(); 
-    unsigned num_node = node.size(); 
-    unsigned num_plan = plan.size(); 
-    unsigned num_tran = tran.size(); 
-    unsigned num_itra = itra.size(); 
-
     std::cout 
         << "CSGFoundry::upload"
-        << " num_solid " << num_solid
-        << " num_prim " << num_prim
-        << " num_node " << num_node
-        << " num_plan " << num_plan
-        << " num_tran " << num_tran
-        << " num_itra " << num_itra
+        << " num_solid " << solid.size()
+        << " num_prim " << prim.size()
+        << " num_node " << node.size()
+        << " num_plan " << plan.size()
+        << " num_tran " << tran.size()
+        << " num_itra " << itra.size()
+        << " num_inst " << inst.size()
         << std::endl
         ;
 
-    assert( num_tran == num_itra ); 
+    assert( tran.size() == itra.size() ); 
 
-    d_solid = num_solid > 0 ? CU::UploadArray<CSGSolid>(solid.data(), num_solid ) : nullptr ; 
-    d_prim = num_prim > 0 ? CU::UploadArray<CSGPrim>(prim.data(), num_prim ) : nullptr ; 
-    d_node = num_node > 0 ? CU::UploadArray<CSGNode>(node.data(), num_node ) : nullptr ; 
-    d_plan = num_plan > 0 ? CU::UploadArray<float4>(plan.data(), num_plan ) : nullptr ; 
-    d_tran = num_tran > 0 ? CU::UploadArray<qat4>(tran.data(), num_tran ) : nullptr ; 
-    d_itra = num_itra > 0 ? CU::UploadArray<qat4>(itra.data(), num_itra ) : nullptr ; 
+    d_solid = solid.size() > 0 ? CU::UploadArray<CSGSolid>(solid.data(), solid.size() ) : nullptr ; 
+    d_prim = prim.size() > 0 ? CU::UploadArray<CSGPrim>(prim.data(), prim.size() ) : nullptr ; 
+    d_node = node.size() > 0 ? CU::UploadArray<CSGNode>(node.data(), node.size() ) : nullptr ; 
+    d_plan = plan.size() > 0 ? CU::UploadArray<float4>(plan.data(), plan.size() ) : nullptr ; 
+    d_tran = tran.size() > 0 ? CU::UploadArray<qat4>(tran.data(), tran.size() ) : nullptr ; 
+    d_itra = itra.size() > 0 ? CU::UploadArray<qat4>(itra.data(), itra.size() ) : nullptr ; 
+
+    // note that d_solid and d_tran are not actually used on GPU currently 
+
+    inst_find_unique(); 
 }
+
+void CSGFoundry::inst_find_unique()
+{
+    qat4::find_unique( inst, ins, gas, ias ); 
+    std::cout 
+        << "CSGFoundry::inst_find_unique"
+        << " num_inst " << inst.size()
+        << " ins " << ins.size()
+        << " gas " << gas.size()
+        << " ias " << ias.size()
+        << std::endl
+        ;
+}
+
+unsigned CSGFoundry::getNumUniqueIAS() const
+{
+    return ias.size(); 
+}
+unsigned CSGFoundry::getNumUniqueGAS() const
+{
+    return gas.size(); 
+}
+unsigned CSGFoundry::getNumUniqueINS() const
+{
+    return ins.size(); 
+}
+
+unsigned CSGFoundry::getNumInstancesIAS(unsigned ias_idx) const
+{
+    return qat4::count_ias(inst, ias_idx );  
+}
+
+
+
+
+
 
