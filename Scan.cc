@@ -3,6 +3,7 @@
 
 #include "qat4.h"
 
+
 #include "csg_intersect_node.h"
 #include "csg_intersect_tree.h"
 #include "CSGFoundry.h"

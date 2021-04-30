@@ -7,10 +7,10 @@ export CSG_PREFIX=/usr/local/csg
 export PATH=$CSG_PREFIX/lib:$PATH
 
 case $(uname) in
-  Darwin) var=DYLD_LIBRARY_PATH ;;
-  Linux)  var=LD_LIBRARY_PATH   ;;
+  Darwin) var=DYLD_LIBRARY_PATH ; lib="lib" ;;
+  Linux)  var=LD_LIBRARY_PATH ; lib="lib64"  ;;
 esac
-export $var=$CSG_PREFIX/lib  
+export $var=$CSG_PREFIX/$lib  
 
 
 msg="=== $0 :"

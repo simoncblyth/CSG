@@ -18,7 +18,7 @@ Writes num_prim*6 bbox floats into out.
 
 void CSGPrimSpec::gather(std::vector<float>& out) const 
 {
-    assert( device == false ); 
+    //assert( device == false ); 
     unsigned size_in_floats = 6 ; 
     out.resize( num_prim*size_in_floats ); 
 

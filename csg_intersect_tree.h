@@ -6,6 +6,11 @@
 #    define TREE_FUNC
 #endif
 
+#if defined(__CUDACC__) || defined(__CUDABE__)
+#else
+#include <cmath>  // signbit
+using std::signbit ; 
+#endif
 
 #include "csg_error.h"
 #include "csg_tranche.h"
