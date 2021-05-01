@@ -15,10 +15,11 @@ std::string CSGSolid::desc() const
 {
     std::stringstream ss ; 
     ss << "CSGSolid " 
-       << std::setw(30) << label 
-       << " numPrim " << std::setw(3) << numPrim 
-       << " primOffset " << std::setw(3) << primOffset
-       << " center_extent " << center_extent
+       << std::setw(5) << label 
+       << " primNum/Offset " 
+       << std::setw(3) << numPrim 
+       << std::setw(3) << primOffset
+       << " ce " << center_extent
        ; 
     std::string s = ss.str(); 
     return s ; 

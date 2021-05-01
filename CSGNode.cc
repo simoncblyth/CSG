@@ -17,17 +17,14 @@ const float CSGNode::UNBOUNDED_DEFAULT_EXTENT = 100.f ;
 std::string CSGNode::desc() const 
 {
     const float* aabb = AABB(); 
-
     std::stringstream ss ; 
     ss
        << "CSGNode "
-       << CSG::Name((OpticksCSG_t)typecode())
-       << " "
+       << CSG::Tag((OpticksCSG_t)typecode())
+       << " aabb: "
        ;    
 
-    for(int i=0 ; i < 6 ; i++ ) ss << std::setw(10) << *(aabb+i) << " " ; 
-
-
+    for(int i=0 ; i < 6 ; i++ ) ss << std::setw(7) << std::fixed << std::setprecision(1) << *(aabb+i) << " " ; 
     std::string s = ss.str();
     return s ; 
 }

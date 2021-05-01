@@ -2630,14 +2630,14 @@ SUTIL_INLINE SUTIL_HOSTDEVICE float4 make_float4(const float2& v0, const float2&
 
 inline std::ostream& operator<<(std::ostream& os, const float3& v)
 {
-    int w = 10 ; 
+    int w = 6 ; 
     os 
        << "(" 
-       << std::setw(w) << v.x 
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.x 
        << "," 
-       << std::setw(w) << v.y
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.y 
        << "," 
-       << std::setw(w) << v.z 
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.z 
        << ") "  
        ;
     return os; 
@@ -2645,16 +2645,16 @@ inline std::ostream& operator<<(std::ostream& os, const float3& v)
 
 inline std::ostream& operator<<(std::ostream& os, const float4& v)
 {
-    int w = 10 ; 
+    int w = 6 ; 
     os 
        << "(" 
-       << std::setw(w) << v.x 
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.x 
        << "," 
-       << std::setw(w) << v.y
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.y
        << "," 
-       << std::setw(w) << v.z 
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.z 
        << "," 
-       << std::setw(w) << v.w 
+       << std::setw(w) << std::fixed << std::setprecision(1) << v.w 
        << ") "  
        ;
     return os; 

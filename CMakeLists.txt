@@ -27,16 +27,18 @@ list(APPEND SOURCES
     CSGPrim.cc
     CSGPrimSpec.cc
     CSGSolid.cc
-
     Tran.cc
     CSGFoundry.cc
-
     Scan.cc
     View.cc
+
     Util.cc
     Grid.cc
-    Geo.cc
 )
+
+#[=[
+Util.cc and Grid.cc do not belong here, they should be beside DemoGeo in CSGOptiX/tests/
+#]=]
 
 list(APPEND HEADERS
     sutil_vec_math.h
@@ -53,13 +55,11 @@ list(APPEND HEADERS
     Tran.h
     AABB.h
     CSGFoundry.h
-
     Scan.h
     View.h
 
     Util.h
     Grid.h
-    Geo.h
 )
 
 list(APPEND INTERSECT_HEADERS

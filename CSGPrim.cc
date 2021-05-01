@@ -21,11 +21,12 @@ std::string CSGPrim::desc() const
       << "CSGPrim"
       << " mn " << mn() 
       << " mx " << mx() 
-      << " sbtIndexOffset " << sbtIndexOffset() 
-      << " numNode "    << std::setw(3) << numNode() 
-      << " nodeOffset " << std::setw(3) << nodeOffset()
-      << " tranOffset " << std::setw(3) << tranOffset()
-      << " planOffset " << std::setw(3) << planOffset()
+      << " numNode/sbt/node/tran/planOffset " 
+      << std::setw(3) << numNode() 
+      << std::setw(3) << sbtIndexOffset() 
+      << std::setw(3) << nodeOffset()
+      << std::setw(3) << tranOffset()
+      << std::setw(3) << planOffset()
       ;
     
     std::string s = ss.str(); 

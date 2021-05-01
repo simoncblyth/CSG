@@ -57,7 +57,6 @@ void CSGFoundry::makeDemoSolids()
     makeIntersectionBoxSphere();
     makeDifferenceBoxSphere();
     makeRotatedCylinder();
-    dump(); 
 }
 
 std::string CSGFoundry::getBashMap()
@@ -77,12 +76,15 @@ std::string CSGFoundry::getBashMap()
 
 void CSGFoundry::dump() const 
 {
-    for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpSolid(idx); 
+    std::cout << "[ CSGFoundry::dump " << std::endl ; 
+    for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpPrim(idx); 
+    for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpNode(idx); 
+    std::cout << "] CSGFoundry::dump " << std::endl ; 
 }
 
 void CSGFoundry::dumpSolid(unsigned solidIdx) const 
 {
-    std::cout << "CSGFoundry::dumpSolid " << solidIdx << std::endl ; 
+    //std::cout << "CSGFoundry::dumpSolid " << solidIdx << std::endl ; 
 
     const CSGSolid* so = solid.data() + solidIdx ; 
     std::cout << so->desc() << std::endl ; 
@@ -106,9 +108,10 @@ void CSGFoundry::dumpSolid(unsigned solidIdx) const
 
 void CSGFoundry::dumpPrim(unsigned solidIdx) const 
 {
-    std::cout << "CSGFoundry::dumpPrim" << solidIdx << std::endl ; 
+    //std::cout << "CSGFoundry::dumpPrim " << solidIdx << std::endl ; 
     const CSGSolid* so = solid.data() + solidIdx ; 
-    std::cout << so->desc() << std::endl ; 
+    std::cout << so->desc() ; 
+    if( so->numPrim > 1 ) std::cout << std::endl  ; 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
@@ -122,9 +125,15 @@ void CSGFoundry::dumpPrim(unsigned solidIdx) const
 
 void CSGFoundry::dumpNode(unsigned solidIdx) const 
 {
-    std::cout << "CSGFoundry::dumpNode" << solidIdx << std::endl ; 
+    //std::cout << "CSGFoundry::dumpNode " << solidIdx << std::endl ; 
     const CSGSolid* so = solid.data() + solidIdx ; 
-    std::cout << so->desc() << std::endl ; 
+
+    const CSGPrim* pr0 = prim.data() + so->primOffset ; 
+    const CSGNode* nd0 = node.data() + pr0->nodeOffset() ;  
+
+    std::cout << so->desc() ;
+    if( so->numPrim > 1 || pr0->numNode() > 1) std::cout << std::endl ;
+
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
@@ -606,7 +615,7 @@ CSGSolid* CSGFoundry::makeEllipsoid(  const char* label, float rx, float ry, flo
     const Tran<double>* tr = Tran<double>::make_scale(sx, sy, sz ); 
 
     unsigned idx = 1 + addTran(*tr);      // 1-based idx, 0 meaning None
-    std::cout << "CSGFoundry::makeEllipsoid " << *tr << std::endl ;
+    //std::cout << "CSGFoundry::makeEllipsoid " << *tr << std::endl ;
 
     nd.setTransform(idx); 
     return makeSolid11(label, nd ); 
@@ -618,7 +627,7 @@ CSGSolid* CSGFoundry::makeRotatedCylinder(const char* label, float px, float py,
     CSGNode nd = CSGNode::Cylinder( px, py, radius, z1, z2 ); 
     const Tran<float>* tr = Tran<float>::make_rotate(ax, ay, az, angle_deg ); 
     unsigned idx = 1 + addTran(*tr);      // 1-based idx, 0 meaning None
-    std::cout << "CSGFoundry::makeRotatedCylinder " << *tr << std::endl ;
+    //std::cout << "CSGFoundry::makeRotatedCylinder " << *tr << std::endl ;
     nd.setTransform(idx); 
     return makeSolid11(label, nd ); 
 }
