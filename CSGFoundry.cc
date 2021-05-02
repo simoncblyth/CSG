@@ -17,7 +17,7 @@
 
 CSGFoundry::CSGFoundry()
     :
-    imax(1000),
+    imax(50000),
     d_solid(nullptr),
     d_prim(nullptr),
     d_node(nullptr),
@@ -280,7 +280,20 @@ CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
     }
 
     unsigned idx = node.size() ;  
-    assert( idx < imax ); 
+
+    bool in_range = idx < imax  ;
+    if(!in_range)
+    {
+        std::cout 
+            << "CSGFoundry::addNode"
+            << " FATAL : OUT OF RANGE "
+            << " idx " << idx 
+            << " imax " << imax
+            << std::endl  
+            ;
+    }
+
+    assert( in_range ); 
     node.push_back(nd); 
     return node.data() + idx ; 
 }
@@ -334,7 +347,7 @@ CSGNode* CSGFoundry::addNodes(const std::vector<CSGNode>& nds )
 
 /**
 CSGFoundry::addPrim
-------------------
+---------------------
 
 Offsets counts for  node, tran and plan are 
 persisted into the CSGPrim. 
@@ -358,6 +371,16 @@ CSGPrim* CSGFoundry::addPrim(int num_node)
     return prim.data() + primIdx ; 
 }
 
+
+/**
+CSGFoundry::addSolid
+----------------------
+
+The Prim offset is persisted into the CSGSolid
+thus must addSolid prior to adding any prim
+for the solid. 
+
+**/
 
 CSGSolid* CSGFoundry::addSolid(unsigned num_prim, const char* label )
 {
@@ -386,6 +409,17 @@ But prior to that just do layering for sphere for adiabatic transition
 from Shape to CSGFoundry/CSGSolid.
 
 NB Each layer is a separate CSGPrim with a single CSGNode 
+
+NB the ordering of addition is prescribed, must stick 
+ridgidly to the below order of addition.  
+
+   addSolid
+   addPrim
+   addNode
+
+Note that Node and Prim can be created anytime, the 
+restriction is on the order of addition because 
+of the capturing of offsets.
 
 **/
 
@@ -427,17 +461,6 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
 
 CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, int j0, int j1, int js, int k0, int k1, int ks, double unit, bool inbox ) 
 {
-
-    /*
-    std::array<int, 9> cluster = {i0,i1,is,j0,j1,js,k0,k1,ks} ; 
-    int3 imn = make_int3(i0,j0,k0); 
-    int3 imx = make_int3(i1,j1,k1);
-    float3 mn = make_float3( float(imn.x), float(imn.y), float(imn.z))*float(unit) ;  
-    float3 mx = make_float3( float(imx.x), float(imx.y), float(imx.z))*float(unit) ;  
-    AABB cbb = {mn, mx } ; 
-    float4 cluster_ce = cbb.center_extent(); 
-    */
-    
     unsigned numPrim = inbox ? 1 : 0 ; 
     for(int i=i0 ; i < i1 ; i+=is ) 
     for(int j=j0 ; j < j1 ; j+=js ) 
@@ -446,8 +469,6 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
         //std::cout << std::setw(2) << numPrim << " (i,j,k) " << "(" << i << "," << j << "," << k << ") " << std::endl ; 
         numPrim += 1 ; 
     }
-
-
        
     std::cout 
         << "CSGFoundry::makeClustered " 
@@ -479,10 +500,10 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
 
         bb.include_aabb( n->AABB() ); 
 
-        p->setSbtIndexOffset(idx) ; 
+        p->setSbtIndexOffset(idx) ;    // HMM: assuming this is the only geometry ? does this need to be absolute ? 
         p->setAABB( n->AABB() );
 
-        DumpAABB("p->AABB() aft setup", p->AABB() ); 
+        //DumpAABB("p->AABB() aft setup", p->AABB() ); 
         
         std::cout << " idx " << idx << " transform_idx " << transform_idx << std::endl ; 
  

@@ -116,6 +116,68 @@ CSGNode CSGNode::BooleanOperator(char op)   // static
     return nd ; 
 }
 
+void CSGNode::setAABBLocal()
+{
+    unsigned tc = typecode(); 
+    if(tc == CSG_SPHERE)
+    {
+        float r = radius();  
+        setAABB(  -r, -r, -r,  r, r, r  ); 
+    }
+    else if(tc == CSG_ZSPHERE)
+    {
+        float r = radius();  
+        float z1_ = z1();  
+        float z2_ = z2();  
+        assert( z2_ > z1_ ); 
+        setAABB(  -r, -r, z1_,  r, r, z2_  ); 
+    }
+    else if( tc == CSG_CONE )
+    {
+        float r1, z1, r2, z2, a, b ; 
+        getParam( r1, z1, r2, z2, a, b ); 
+        float rmax = fmaxf(r1, r2) ;
+        setAABB( -rmax, -rmax, z1, rmax, rmax, z2 ); 
+    }
+    else if( tc == CSG_BOX3 )
+    {
+        float fx, fy, fz, a, b, c ; 
+        getParam( fx, fy, fz, a, b, c ); 
+        setAABB( -fx*0.5f , -fy*0.5f, -fz*0.5f, fx*0.5f , fy*0.5f, fz*0.5f );   
+    }
+    else if( tc == CSG_CYLINDER )
+    {
+        float px, py, a, radius, z1, z2 ; 
+        getParam( px, py, a, radius, z1, z2) ; 
+        setAABB( px-radius, py-radius, z1, px+radius, py+radius, z2 );   
+    }
+    else if( tc == CSG_DISC )
+    {
+        float px, py, ir, r, z1, z2 ; 
+        getParam( px, py, ir, r, z1, z2 ); 
+        setAABB( px - r , py - r , z1, px + r, py + r, z2 ); 
+    }
+    else if( tc == CSG_HYPERBOLOID )
+    {
+        float r0, zf, z1, z2, a, b ; 
+        getParam(r0, zf, z1, z2, a, b ) ; 
+
+        assert( z1 < z2 ); 
+        const float rr0 = r0*r0 ; 
+        const float z1s = z1/zf ; 
+        const float z2s = z2/zf ; 
+
+        const float rr1 = rr0 * ( z1s*z1s + 1.f ) ;
+        const float rr2 = rr0 * ( z2s*z2s + 1.f ) ;
+        const float rmx = sqrtf(fmaxf( rr1, rr2 )) ; 
+
+        setAABB(  -rmx,  -rmx,  z1,  rmx, rmx, z2 ); 
+    }
+    else
+    {
+        setAABB( UNBOUNDED_DEFAULT_EXTENT ); 
+    }
+}
 
 CSGNode CSGNode::Sphere(float radius)  // static
 {
@@ -126,7 +188,6 @@ CSGNode CSGNode::Sphere(float radius)  // static
     nd.setTypecode(CSG_SPHERE) ; 
     return nd ;
 }
-
 CSGNode CSGNode::ZSphere(float radius, float z1, float z2)  // static
 {
     assert( radius > 0.f); 
@@ -137,7 +198,6 @@ CSGNode CSGNode::ZSphere(float radius, float z1, float z2)  // static
     nd.setTypecode(CSG_ZSPHERE) ; 
     return nd ;
 }
-
 CSGNode CSGNode::Cone(float r1, float z1, float r2, float z2)  // static
 {
     assert( z2 > z1 ); 
@@ -148,27 +208,6 @@ CSGNode CSGNode::Cone(float r1, float z1, float r2, float z2)  // static
     nd.setTypecode(CSG_CONE) ; 
     return nd ; 
 }
-
-CSGNode CSGNode::Hyperboloid(float r0, float zf, float z1, float z2) // static
-{
-    assert( z1 < z2 ); 
-    const float rr0 = r0*r0 ; 
-    const float z1s = z1/zf ; 
-    const float z2s = z2/zf ; 
-
-    const float rr1 = rr0 * ( z1s*z1s + 1.f ) ;
-    const float rr2 = rr0 * ( z2s*z2s + 1.f ) ;
-    const float rmx = sqrtf(fmaxf( rr1, rr2 )) ; 
-
-
-    CSGNode nd = {} ;
-    nd.setParam(r0, zf, z1, z2, 0.f, 0.f ) ; 
-    nd.setAABB(  -rmx,  -rmx,  z1,  rmx, rmx, z2 ); 
-    nd.setTypecode(CSG_HYPERBOLOID) ; 
-    return nd ; 
-}
-
-
 CSGNode CSGNode::Box3(float fullside)  // static 
 {
     return Box3(fullside, fullside, fullside); 
@@ -185,6 +224,41 @@ CSGNode CSGNode::Box3(float fx, float fy, float fz )  // static
     nd.setTypecode(CSG_BOX3) ; 
     return nd ; 
 }
+CSGNode CSGNode::Cylinder(float px, float py, float radius, float z1, float z2)
+{
+    CSGNode nd = {} ; 
+    nd.setParam( px, py, 0.f, radius, z1, z2)  ; 
+    nd.setAABB( px-radius, py-radius, z1, px+radius, py+radius, z2 );   
+    nd.setTypecode(CSG_CYLINDER); 
+    return nd ; 
+} 
+CSGNode CSGNode::Disc(float px, float py, float ir, float r, float z1, float z2)
+{
+    CSGNode nd = {} ;
+    nd.setParam( px, py, ir, r, z1, z2 ); 
+    nd.setAABB( px - r , py - r , z1, px + r, py + r, z2 ); 
+    nd.setTypecode(CSG_DISC); 
+    return nd ; 
+} 
+
+CSGNode CSGNode::Hyperboloid(float r0, float zf, float z1, float z2) // static
+{
+    assert( z1 < z2 ); 
+    const float rr0 = r0*r0 ; 
+    const float z1s = z1/zf ; 
+    const float z2s = z2/zf ; 
+
+    const float rr1 = rr0 * ( z1s*z1s + 1.f ) ;
+    const float rr2 = rr0 * ( z2s*z2s + 1.f ) ;
+    const float rmx = sqrtf(fmaxf( rr1, rr2 )) ; 
+
+    CSGNode nd = {} ;
+    nd.setParam(r0, zf, z1, z2, 0.f, 0.f ) ; 
+    nd.setAABB(  -rmx,  -rmx,  z1,  rmx, rmx, z2 ); 
+    nd.setTypecode(CSG_HYPERBOLOID) ; 
+    return nd ; 
+}
+
 
 CSGNode CSGNode::Plane(float nx, float ny, float nz, float d)
 {
@@ -204,23 +278,7 @@ CSGNode CSGNode::Slab(float nx, float ny, float nz, float d1, float d2 )
     return nd ; 
 }
 
-CSGNode CSGNode::Cylinder(float px, float py, float radius, float z1, float z2)
-{
-    CSGNode nd = {} ; 
-    nd.setParam( px, py, 0.f, radius, z1, z2)  ; 
-    nd.setAABB( px-radius, py-radius, z1, px+radius, py+radius, z2 );   
-    nd.setTypecode(CSG_CYLINDER); 
-    return nd ; 
-} 
 
-CSGNode CSGNode::Disc(float px, float py, float ir, float r, float z1, float z2)
-{
-    CSGNode nd = {} ;
-    nd.setParam( px, py, ir, r, z1, z2 ); 
-    nd.setAABB( px - r , py - r , z1, px + r, py + r, z2 ); 
-    nd.setTypecode(CSG_DISC); 
-    return nd ; 
-} 
 
 /**
 CSGNode::Make
@@ -244,6 +302,17 @@ CSGNode CSGNode::Make(const char* name) // static
     assert(0); 
     return CSGNode::Sphere(1.0); 
 }
+
+CSGNode CSGNode::Make(unsigned typecode, const float* param6, const float* aabb ) // static
+{
+    CSGNode nd = {} ;
+    nd.setTypecode(typecode) ; 
+    if(param6) nd.setParam( param6 );  
+    if(aabb)    nd.setAABB( aabb );  
+    return nd ; 
+}
+
+
 
 #endif
 

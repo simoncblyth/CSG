@@ -56,14 +56,14 @@ cx:convexpolyhedron
     |    | b3:fx          | b3:fy          | b3:fz          |                |  b3: fullside dimensions, center always origin  |
     |    | pl/sl:nx       | pl/sl:ny       | pl/sl:nz       | pl:d           |  pl: NB Node plane distinct from plane array    |
     |    |                |                | ds:inner_r     | ds:radius      |                                                 |
-    |    |                |                |                |                |                                                 |
+    |    |                |                |                | radius()       |                                                 |
     |    | cx:planeIdx    | cx:planeNum    |                |                |                                                 |
     +----+----------------+----------------+----------------+----------------+-------------------------------------------------+
     |    | zs:zdelta_0    | zs:zdelta_1    | boundary       | index          |                                                 |
     |    | sl:a           | sl:b           |                |                |  sl:a,b offsets from origin                     |
     | q1 | cy:z1          | cy:z2          |                |                |  cy:z2 > z1                                     |
     |    | ds:z1          | ds:z2          |                |                |                                                 |
-    |    |                |                |                |                |                                                 |
+    |    | z1()           | z2()           |                |                |                                                 |
     +----+----------------+----------------+----------------+----------------+-------------------------------------------------+
     |    |                |                |                |                |  q2.w was previously typecode                   |
     |    |                |                |                |                |                                                 |
@@ -81,7 +81,7 @@ cx:convexpolyhedron
     +----+----------------+----------------+----------------+----------------+-------------------------------------------------+
 
 
-* moving typecode would give 6 contiguous slots for aabb
+* moved typecode from q2.w in order to give 6 contiguous slots for aabb
 
 **/
 
@@ -92,20 +92,53 @@ struct CSGNode
     quad q2 ; 
     quad q3 ; 
 
-    NODE_METHOD unsigned gtransformIdx() const { return q3.u.w & 0x7fffffff ; }  //  gtransformIdx is 1-based, 0 meaning None 
-    NODE_METHOD bool        complement() const { return q3.u.w & 0x80000000 ; } 
-
     NODE_METHOD unsigned planeIdx()      const { return q0.u.x ; }  // 1-based, 0 meaning None
     NODE_METHOD unsigned planeNum()      const { return q0.u.y ; } 
     NODE_METHOD void setPlaneIdx(unsigned idx){  q0.u.x = idx ; } 
     NODE_METHOD void setPlaneNum(unsigned num){  q0.u.y = num ; }
 
-    NODE_METHOD void setTransform(  unsigned idx ){     q3.u.w |= (idx & 0x7fffffff) ; }
-    NODE_METHOD void setComplement( bool complement ){  q3.u.w |= ( (int(complement) << 31) & 0x80000000) ; }
+    NODE_METHOD void getParam( float& x , float& y , float& z , float& w , float& z1, float& z2 )
+    {
+        x = q0.f.x ; 
+        y = q0.f.y ; 
+        z = q0.f.z ; 
+        w = q0.f.w ; 
+        z1 = q1.f.x ;
+        z2 = q1.f.y ;  
+    }
+    NODE_METHOD void setParam( float  x , float  y , float  z , float  w , float  z1, float  z2 )
+    { 
+        q0.f.x = x  ; 
+        q0.f.y = y  ; 
+        q0.f.z = z  ; 
+        q0.f.w = w  ; 
+        q1.f.x = z1 ; 
+        q1.f.y = z2 ;  
+    }
 
-    NODE_METHOD void setParam( float x , float y , float z , float w , float z1, float z2 ){ q0.f.x = x  ; q0.f.y = y  ; q0.f.z = z  ; q0.f.w = w  ; q1.f.x = z1 ; q1.f.y = z2 ;  }
+    NODE_METHOD void setParam(const float* p)
+    { 
+        q0.f.x = *(p+0) ; 
+        q0.f.y = *(p+1) ; 
+        q0.f.z = *(p+2) ; 
+        q0.f.w = *(p+3) ; 
+        q1.f.x = *(p+4) ; 
+        q1.f.y = *(p+5) ;  
+    }
+
+    NODE_METHOD void setAABBLocal();  // sets local frame BBox based on typecode and parameters (WARNING: not implemented for all shapes yet)
     NODE_METHOD void setAABB(  float x0, float y0, float z0, float x1, float y1, float z1){  q2.f.x = x0 ; q2.f.y = y0 ; q2.f.z = z0 ; q2.f.w = x1 ; q3.f.x = y1 ; q3.f.y = z1 ; }  
     NODE_METHOD void setAABB(  float e ){                                                    q2.f.x = -e ; q2.f.y = -e ; q2.f.z = -e ; q2.f.w =  e ; q3.f.x =  e ; q3.f.y =  e ; }  
+    NODE_METHOD void setAABB(const float* p)
+    { 
+        q2.f.x = *(p+0) ; 
+        q2.f.y = *(p+1) ; 
+        q2.f.z = *(p+2) ; 
+        q2.f.w = *(p+3) ; 
+        q3.f.x = *(p+4) ; 
+        q3.f.y = *(p+5) ;  
+    }
+
 
     NODE_METHOD       float* AABB()       {  return &q2.f.x ; }
     NODE_METHOD const float* AABB() const {  return &q2.f.x ; }
@@ -118,13 +151,25 @@ struct CSGNode
     }
 
 
+    NODE_METHOD unsigned boundary()  const {      return q1.u.z ; }   
+    NODE_METHOD void setBoundary(unsigned bnd){          q1.u.z = bnd ; }
 
-    NODE_METHOD unsigned index()     const {      return q1.u.w ; }  //  
-    NODE_METHOD unsigned boundary()  const {      return q1.u.z ; }  //   see ggeo-/GPmt
+    NODE_METHOD unsigned index()     const {      return q1.u.w ; }    
+    NODE_METHOD void setIndex(unsigned idx){             q1.u.w = idx ; }
 
     NODE_METHOD unsigned typecode()  const {      return q3.u.z ; }  //  OptickCSG_t enum 
     NODE_METHOD void setTypecode(unsigned tc){           q3.u.z = tc ; }
 
+    NODE_METHOD void setTransform(  unsigned idx ){     q3.u.w |= (idx & 0x7fffffff) ; }
+    NODE_METHOD void setComplement( bool complement ){  q3.u.w |= ( (int(complement) << 31) & 0x80000000) ; }
+
+    NODE_METHOD unsigned gtransformIdx() const { return q3.u.w & 0x7fffffff ; }  //  gtransformIdx is 1-based, 0 meaning None 
+    NODE_METHOD bool        complement() const { return q3.u.w & 0x80000000 ; } 
+
+
+    NODE_METHOD float radius() const { return q0.f.w ; } ;
+    NODE_METHOD float z1() const {     return q1.f.x ; } ;
+    NODE_METHOD float z2() const {     return q1.f.y ; } ;
 
 
 
@@ -152,6 +197,7 @@ struct CSGNode
     static CSGNode Disc(float px, float py, float ir, float r, float z1, float z2);
 
     static CSGNode Make(const char* name); 
+    static CSGNode Make(unsigned typecode, const float* param6, const float* aabb); 
 
 #endif
 

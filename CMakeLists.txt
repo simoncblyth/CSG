@@ -4,7 +4,6 @@ project(${name})
 
 set(CMAKE_CXX_STANDARD 11) 
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-
 include(GNUInstallDirs) 
 
 find_package(CUDA REQUIRED) 
@@ -15,11 +14,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR} 
 )
 
-
 set(SOURCES)
 set(HEADERS)
 set(INTERSECT_HEADERS)
-
 
 list(APPEND SOURCES
     CSGNode.cc
@@ -32,7 +29,6 @@ list(APPEND SOURCES
     Scan.cc
     View.cc
 )
-
 
 list(APPEND HEADERS
     sutil_vec_math.h
@@ -69,7 +65,6 @@ list(APPEND CUDA_HEADERS
     CUDA_CHECK.h
 )
 
-
 message(STATUS "CMAKE_INSTALL_PREFIX     : ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_INSTALL_INCLUDEDIR : ${CMAKE_INSTALL_INCLUDEDIR}")
 message(STATUS "CMAKE_INSTALL_LIBDIR     : ${CMAKE_INSTALL_LIBDIR}")
@@ -88,47 +83,24 @@ target_include_directories(${name}
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-
-
 install(FILES ${HEADERS} ${INTERSECT_HEADERS} ${CUDA_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 add_subdirectory(tests)
 
 
-set(CSG_INCLUDE_DIRS "include")
-
-
-
 #[=[
 https://cmake.org/cmake/help/git-master/guide/tutorial/index.html#adding-export-configuration-step-11
-
 https://cmake.org/cmake/help/git-stage/guide/importing-exporting/index.html
 #]=]
 
-
 set(CONFIG_DEST ${CMAKE_INSTALL_LIBDIR}/cmake/CSG) 
-
-
+set(CSG_INCLUDE_DIRS "include")
 install(TARGETS ${name}  DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT CSGTargets )
-
-install(EXPORT CSGTargets
-        FILE CSGTargets.cmake
-        DESTINATION ${CONFIG_DEST}
-)
-
+install(EXPORT CSGTargets FILE CSGTargets.cmake DESTINATION ${CONFIG_DEST}) 
 include(CMakePackageConfigHelpers)
-
 configure_package_config_file ( 
        "CSGConfig.cmake.in" "${CMAKE_BINARY_DIR}/CSGConfig.cmake"
        INSTALL_DESTINATION "${CONFIG_DEST}"
        PATH_VARS CSG_INCLUDE_DIRS 
 )
-
 install(FILES ${CMAKE_BINARY_DIR}/CSGConfig.cmake DESTINATION ${CONFIG_DEST})
-
-
-
-
-
-
-
 
