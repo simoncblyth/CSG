@@ -1,21 +1,44 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(name CSG)
-project(${name})
+project(${name} VERSION 0.1.0)
+
+
+#[=[
+Below extracts BCM hookup for minimal boilerplate package export from the usual "include(OpticksBuildOptions)"
+of Opticks packages
+#]=]
+
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_INCLUDEDIR "include/${name}")  # override the GNUInstallDirs default of "include"
+
+find_package(BCM CONFIG)
+
+if(NOT BCM_FOUND)
+   message(STATUS "CMAKE_MODULE_PATH:${CMAKE_MODULE_PATH}")
+   message(STATUS "CMAKE_PREFIX_PATH:${CMAKE_PREFIX_PATH}   expect to find BCM in one of these prefix dirs")
+   message(STATUS "typically BCM is found thanks to the CMAKE_PREFIX_PATH envvar including ${OPTICKS_PREFIX}/externals ")
+   message(STATUS "see examples/UseBCM to debug failure to find BCM ")
+   message(FATAL_ERROR "ABORT " )
+endif()
+
+include(BCMDeploy)
 
 set(CMAKE_CXX_STANDARD 11) 
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-include(GNUInstallDirs) 
+
 
 find_package(CUDA REQUIRED) 
 
 include_directories(
     ${CUDA_INCLUDE_DIRS}
-    ${CMAKE_INSTALL_PREFIX}/externals/glm/glm
+    ${OPTICKS_PREFIX}/externals/glm/glm
     ${CMAKE_CURRENT_SOURCE_DIR} 
 )
 
 set(SOURCES)
 set(HEADERS)
+
+set(CSG_HEADERS)
 set(INTERSECT_HEADERS)
 
 list(APPEND SOURCES
@@ -30,7 +53,7 @@ list(APPEND SOURCES
     View.cc
 )
 
-list(APPEND HEADERS
+list(APPEND CSG_HEADERS
     sutil_vec_math.h
     Quad.h 
     OpticksCSG.h
@@ -65,6 +88,13 @@ list(APPEND CUDA_HEADERS
     CUDA_CHECK.h
 )
 
+list(APPEND HEADERS
+    ${CSG_HEADERS}
+    ${INTERSECT_HEADERS}
+    ${CUDA_HEADERS}
+)
+
+
 message(STATUS "CMAKE_INSTALL_PREFIX     : ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_INSTALL_INCLUDEDIR : ${CMAKE_INSTALL_INCLUDEDIR}")
 message(STATUS "CMAKE_INSTALL_LIBDIR     : ${CMAKE_INSTALL_LIBDIR}")
@@ -72,10 +102,7 @@ message(STATUS "CMAKE_BINARY_DIR         : ${CMAKE_BINARY_DIR}")
 
 
 add_library( ${name}  SHARED ${SOURCES} ${HEADERS} )
-target_link_libraries(${name} 
-     PUBLIC 
-         ${CUDA_LIBRARIES}
-)
+target_link_libraries(${name} PUBLIC ${CUDA_LIBRARIES})
 
 target_include_directories(${name}
      PUBLIC
@@ -83,24 +110,9 @@ target_include_directories(${name}
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-install(FILES ${HEADERS} ${INTERSECT_HEADERS} ${CUDA_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 add_subdirectory(tests)
 
 
-#[=[
-https://cmake.org/cmake/help/git-master/guide/tutorial/index.html#adding-export-configuration-step-11
-https://cmake.org/cmake/help/git-stage/guide/importing-exporting/index.html
-#]=]
+bcm_deploy(TARGETS ${name} NAMESPACE Opticks:: SKIP_HEADER_INSTALL)
 
-set(CONFIG_DEST ${CMAKE_INSTALL_LIBDIR}/cmake/CSG) 
-set(CSG_INCLUDE_DIRS "include")
-install(TARGETS ${name}  DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT CSGTargets )
-install(EXPORT CSGTargets FILE CSGTargets.cmake DESTINATION ${CONFIG_DEST}) 
-include(CMakePackageConfigHelpers)
-configure_package_config_file ( 
-       "CSGConfig.cmake.in" "${CMAKE_BINARY_DIR}/CSGConfig.cmake"
-       INSTALL_DESTINATION "${CONFIG_DEST}"
-       PATH_VARS CSG_INCLUDE_DIRS 
-)
-install(FILES ${CMAKE_BINARY_DIR}/CSGConfig.cmake DESTINATION ${CONFIG_DEST})
-
+install(FILES ${HEADERS}  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
