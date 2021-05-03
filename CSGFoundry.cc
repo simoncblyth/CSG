@@ -501,7 +501,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
         bb.include_aabb( n->AABB() ); 
 
         p->setSbtIndexOffset(idx) ;    // HMM: assuming this is the only geometry ? does this need to be absolute ? 
-        p->setAABB( n->AABB() );
+        p->setAABB( n->AABB() );  // HUH : THIS SHOULD BE bb ?
 
         //DumpAABB("p->AABB() aft setup", p->AABB() ); 
         

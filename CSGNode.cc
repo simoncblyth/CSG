@@ -173,6 +173,10 @@ void CSGNode::setAABBLocal()
 
         setAABB(  -rmx,  -rmx,  z1,  rmx, rmx, z2 ); 
     }
+    else if( tc == CSG_UNION || tc == CSG_INTERSECTION || tc == CSG_DIFFERENCE )
+    {
+        setAABB( 0.f );  
+    }
     else
     {
         setAABB( UNBOUNDED_DEFAULT_EXTENT ); 
