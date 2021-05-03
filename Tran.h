@@ -21,6 +21,7 @@ numerical issues.
 template<typename T>
 struct Tran
 {
+    static const Tran<T>* make_translate( const T tx, const T ty, const T tz, const T sc);
     static const Tran<T>* make_translate( const T tx, const T ty, const T tz);
     static const Tran<T>* make_scale(     const T sx, const T sy, const T sz);
     static const Tran<T>* make_rotate(    const T ax, const T ay, const T az, const T angle_deg);

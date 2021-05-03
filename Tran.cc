@@ -2,6 +2,16 @@
 #include <glm/gtx/transform.hpp>
 
 
+
+template<typename T>
+const Tran<T>* Tran<T>::make_translate( const T tx, const T ty, const T tz, const T sc)
+{
+    glm::tvec3<T> tlate(tx*sc,ty*sc,tz*sc); 
+    glm::tmat4x4<T> t = glm::translate(glm::tmat4x4<T>(1.),   tlate ) ;
+    glm::tmat4x4<T> v = glm::translate(glm::tmat4x4<T>(1.),  -tlate ) ;
+    return new Tran<T>(t, v);    
+}
+
 template<typename T>
 const Tran<T>* Tran<T>::make_translate( const T tx, const T ty, const T tz)
 {
