@@ -7,9 +7,9 @@
 struct CSGFoundry ; 
 struct CSGSolid ; 
 
-struct Scan
+struct CSGScan
 {
-    Scan( const char* dir_, const CSGFoundry* foundry_, const CSGSolid* solid_ );   
+    CSGScan( const char* dir_, const CSGFoundry* foundry_, const CSGSolid* solid_ );   
 
     void trace(const float t_min, const float3& ray_origin, const float3& ray_direction );
     void trace(const float t_min, const float3& ray_origin, const std::vector<float3>& dirs );

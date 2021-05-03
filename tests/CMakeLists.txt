@@ -8,10 +8,8 @@ set(TEST_SOURCES
     CSGPrimTest.cc
     CSGSolidTest.cc
     CSGFoundryTest.cc
-
-    ScanTest.cc
+    CSGScanTest.cc
 )
-
 
 foreach(SRC ${TEST_SOURCES})
     get_filename_component(TGT ${SRC} NAME_WE)

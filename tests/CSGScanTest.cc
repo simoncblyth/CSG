@@ -8,12 +8,12 @@
 
 #include "CSGFoundry.h"
 #include "CSGSolid.h"
-#include "Scan.h"
+#include "CSGScan.h"
 
 
 int main(int argc, char** argv)
 {
-    const char* dir = "/tmp/ScanTest_scans" ; 
+    const char* dir = "/tmp/CSGScanTest_scans" ; 
     CSGFoundry fd ;  
 
     //fd.makeDemoSolids(); 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     {
         const CSGSolid* solid = fd.getSolid(i); 
 
-        Scan sc(dir, &fd, solid); 
+        CSGScan sc(dir, &fd, solid); 
         sc.axis_scan(); 
         sc.rectangle_scan(); 
         sc.circle_scan(); 

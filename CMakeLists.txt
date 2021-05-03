@@ -49,7 +49,7 @@ list(APPEND SOURCES
     CSGSolid.cc
     Tran.cc
     CSGFoundry.cc
-    Scan.cc
+    CSGScan.cc
     View.cc
 )
 
@@ -57,6 +57,7 @@ list(APPEND CSG_HEADERS
     sutil_vec_math.h
     Quad.h 
     OpticksCSG.h
+
     CSGNode.h 
 
     CU.h
@@ -67,8 +68,9 @@ list(APPEND CSG_HEADERS
 
     Tran.h
     AABB.h
+
     CSGFoundry.h
-    Scan.h
+    CSGScan.h
     View.h
 )
 
@@ -112,7 +114,8 @@ target_include_directories(${name}
 
 add_subdirectory(tests)
 
-
 bcm_deploy(TARGETS ${name} NAMESPACE Opticks:: SKIP_HEADER_INSTALL)
-
 install(FILES ${HEADERS}  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+

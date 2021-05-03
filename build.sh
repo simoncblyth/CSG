@@ -1,8 +1,10 @@
 #!/bin/bash 
 
-source ./env.sh 
+msg="=== $BASH_SOURCE :"
+sdir=$(pwd)
+name=$(basename $sdir)
 
-bdir=$CSG_PREFIX/build 
+bdir=/tmp/$USER/opticks/$name/build 
 echo $msg bdir $bdir 
 
 rm -rf $bdir && mkdir -p $bdir 
@@ -10,17 +12,14 @@ rm -rf $bdir && mkdir -p $bdir
 
 cd $bdir && pwd 
 
-echo $BASH_SOURCE CMAKE_PREFIX_PATH 
+echo $msg CMAKE_PREFIX_PATH 
 echo $CMAKE_PREFIX_PATH | tr ":" "\n"
 
 cmake $sdir \
      -DCMAKE_BUILD_TYPE=Debug \
      -DOPTICKS_PREFIX=$OPTICKS_PREFIX \
-     -DCMAKE_INSTALL_PREFIX=$CSG_PREFIX
+     -DCMAKE_INSTALL_PREFIX=${OPTICKS_PREFIX}
 
-
-rm -rf   $CSG_PREFIX/lib
-mkdir -p $CSG_PREFIX/lib 
 
 make
 [ $? -ne 0 ] && echo $0 : make FAIL && exit 1

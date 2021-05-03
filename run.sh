@@ -1,8 +1,7 @@
 #!/bin/bash -l 
 
-source ./env.sh 
 
-bins="CSGNodeTest CSGPrimTest CSGSolidTest CSGFoundryTest ScanTest"
+bins="CSGNodeTest CSGPrimTest CSGSolidTest CSGFoundryTest CSGScanTest"
 for bin in $bins ; do
    echo $msg $(which $bin)
    $bin

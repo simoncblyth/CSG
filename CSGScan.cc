@@ -1,17 +1,15 @@
 #include "sutil_vec_math.h"
 #include "NP.hh"
-
 #include "qat4.h"
-
 
 #include "csg_intersect_node.h"
 #include "csg_intersect_tree.h"
+
 #include "CSGFoundry.h"
 #include "CSGSolid.h"
+#include "CSGScan.h"
 
-#include "Scan.h"
-
-Scan::Scan( const char* dir_, const CSGFoundry* foundry_, const CSGSolid* solid_ ) 
+CSGScan::CSGScan( const char* dir_, const CSGFoundry* foundry_, const CSGSolid* solid_ ) 
     :
     dir(strdup(dir_)),
     foundry(foundry_),
@@ -25,7 +23,7 @@ Scan::Scan( const char* dir_, const CSGFoundry* foundry_, const CSGSolid* solid_
 {
 }
 
-void Scan::record(bool valid_isect, const float4& isect,  const float3& ray_origin, const float3& ray_direction )
+void CSGScan::record(bool valid_isect, const float4& isect,  const float3& ray_origin, const float3& ray_direction )
 {
     quad4 rec ;  
 
@@ -39,7 +37,7 @@ void Scan::record(bool valid_isect, const float4& isect,  const float3& ray_orig
 }
 
 
-void Scan::trace(const float t_min, const float3& ray_origin, const float3& ray_direction )
+void CSGScan::trace(const float t_min, const float3& ray_origin, const float3& ray_direction )
 {
     for(unsigned primIdx=primIdx0 ; primIdx < primIdx1 ; primIdx++)
     {
@@ -55,7 +53,7 @@ void Scan::trace(const float t_min, const float3& ray_origin, const float3& ray_
 }
 
 
-void Scan::dump( const quad4& rec )  // stat
+void CSGScan::dump( const quad4& rec )  // stat
 {
     bool valid_isect = rec.q0.i.w == 1 ; 
 
@@ -87,7 +85,7 @@ void Scan::dump( const quad4& rec )  // stat
 
 }
 
-std::string Scan::brief() const
+std::string CSGScan::brief() const
 {
     unsigned nhit = 0 ; 
     unsigned nmiss = 0 ; 
@@ -110,7 +108,7 @@ std::string Scan::brief() const
 }
 
 
-void Scan::trace(const float t_min, const float3& ray_origin, const std::vector<float3>& dirs )
+void CSGScan::trace(const float t_min, const float3& ray_origin, const std::vector<float3>& dirs )
 {
     for(unsigned i=0 ; i < dirs.size() ; i++)
     {
@@ -119,7 +117,7 @@ void Scan::trace(const float t_min, const float3& ray_origin, const std::vector<
     }
 }
 
-void Scan::circle_scan()
+void CSGScan::circle_scan()
 {
     float t_min = 0.f ;
     float4 ce = solid->center_extent ; 
@@ -138,7 +136,7 @@ void Scan::circle_scan()
 }
 
 
-void Scan::_rectangle_scan(float t_min, unsigned n, float halfside, float y )
+void CSGScan::_rectangle_scan(float t_min, unsigned n, float halfside, float y )
 {
     // shooting up/down 
 
@@ -171,7 +169,7 @@ void Scan::_rectangle_scan(float t_min, unsigned n, float halfside, float y )
     }
 }
 
-void Scan::rectangle_scan()
+void CSGScan::rectangle_scan()
 {
     float4 ce = solid->center_extent ; 
     float extent = ce.w ; 
@@ -187,7 +185,7 @@ void Scan::rectangle_scan()
     save("rectangle_scan"); 
 }
 
-void Scan::axis_scan()
+void CSGScan::axis_scan()
 {
     float t_min = 0.f ;
     float4 ce = solid->center_extent ; 
@@ -207,7 +205,7 @@ void Scan::axis_scan()
     save("axis_scan"); 
 }
 
-void Scan::save(const char* sub)
+void CSGScan::save(const char* sub)
 {
     //std::cout << " recs.size " << recs.size() << std::endl ; 
     if(recs.size() == 0 ) return ; 
