@@ -65,7 +65,7 @@ struct CSGPrim
     PRIM_METHOD void setNumNode(   int numNode){    q0.i.x = numNode ; }
     PRIM_METHOD void setNodeOffset(int nodeOffset){ q0.i.y = nodeOffset ; }
     PRIM_METHOD void setTranOffset(int tranOffset){ q0.i.z = tranOffset ; }
-    PRIM_METHOD void setPlanOffset(int planOffset){ q0.i.z = planOffset ; }
+    PRIM_METHOD void setPlanOffset(int planOffset){ q0.i.w = planOffset ; }
 
     PRIM_METHOD unsigned  sbtIndexOffset()    const { return  q1.u.x ; }
     PRIM_METHOD void   setSbtIndexOffset(unsigned sbtIndexOffset){  q1.u.x = sbtIndexOffset ; }

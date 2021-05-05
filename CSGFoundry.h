@@ -22,11 +22,23 @@ CSGFoundry
 
 struct CSGFoundry
 {
+    static const unsigned IMAX ; 
+    static CSGFoundry* Load(const char* base, const char* rel);
+    static int Compare(const CSGFoundry* a , const CSGFoundry* b ); 
+
+    template<typename T>
+    static int CompareVec( const char* name, const std::vector<T>& a, const std::vector<T>& b );
+
+    static int CompareBytes(const void* a, const void* b, unsigned num_bytes);
+
+
     CSGFoundry();
     void init(); 
 
     void makeDemoSolids() ;
-    std::string getBashMap();
+    std::string desc() const ;
+    void summary(const char* msg="CSGFoundry::summary") const ;
+
 
     void dump() const ;
     void dumpSolid(unsigned solidIdx ) const ;
@@ -99,6 +111,10 @@ struct CSGFoundry
     static float4 TriPlane( const std::vector<float3>& v, unsigned i, unsigned j, unsigned k );
 
     void write(const char* base, const char* rel) const ;
+    void load( const char* base, const char* rel ) ; 
+
+    template<typename T> void loadArray( std::vector<T>& vec, const char* dir, const char* name ); 
+
     void upload();
     void inst_find_unique(); 
 
@@ -107,8 +123,6 @@ struct CSGFoundry
     unsigned getNumUniqueINS() const ;
     unsigned getNumInstancesIAS(unsigned ias_idx) const ;
     void     getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx ) const ;
-
-    unsigned            imax ; 
 
     std::vector<CSGSolid>  solid ;   
     std::vector<CSGPrim>   prim ; 

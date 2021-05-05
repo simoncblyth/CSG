@@ -14,21 +14,47 @@
 const float CSGNode::UNBOUNDED_DEFAULT_EXTENT = 100.f ; 
 
 
+std::string CSGNode::Addr(unsigned repeatIdx, unsigned primIdx, unsigned partIdxRel ) // static
+{
+    int wid = 10 ; 
+    std::stringstream ss ; 
+    ss  
+        << std::setw(2) << std::setfill('0') << repeatIdx 
+        << "/" 
+        << std::setw(3) << std::setfill('0') << primIdx 
+        << "/" 
+        << std::setw(3) << std::setfill('0') << partIdxRel
+        ; 
+    std::string s = ss.str(); 
+    std::stringstream tt ; 
+    tt << std::setw(wid) << s ; 
+    std::string t = tt.str(); 
+    return t ; 
+}
+
+std::string CSGNode::Desc(const float* fval, int numval, int wid, int prec ) // static 
+{
+    std::stringstream ss ; 
+    for(int p=0 ; p < numval ; p++) 
+        ss << std::fixed << std::setw(wid) << std::setprecision(prec) << *(fval+p) << " "  ; 
+    std::string s = ss.str(); 
+    return s ; 
+}
+
 std::string CSGNode::desc() const 
 {
     const float* aabb = AABB(); 
     std::stringstream ss ; 
     ss
-       << "CSGNode "
-       << CSG::Tag((OpticksCSG_t)typecode())
-       << " aabb: "
-       ;    
+        << "CSGNode "
+        << std::setw(5) << index() 
+        << " " << CSG::Tag((OpticksCSG_t)typecode())
+        << " aabb: " << Desc( aabb, 6, 7, 1 ) ;
+        ;    
 
-    for(int i=0 ; i < 6 ; i++ ) ss << std::setw(7) << std::fixed << std::setprecision(1) << *(aabb+i) << " " ; 
-    std::string s = ss.str();
+    std::string s = ss.str(); 
     return s ; 
 }
-
 
 void CSGNode::Dump(const CSGNode* n_, unsigned ni, const char* label)
 {

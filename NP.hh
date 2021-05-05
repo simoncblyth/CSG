@@ -536,6 +536,9 @@ newline from the stream without returning it.
 
 **/
 
+
+
+
 inline int NP::load(const char* path)
 {
     lpath = path ;  // loadpath 
@@ -543,7 +546,7 @@ inline int NP::load(const char* path)
     std::ifstream fp(path, std::ios::in|std::ios::binary);
     if(fp.fail())
     {
-        std::cerr << "Failed to load from path " << path << std::endl ; 
+        //std::cerr << "Failed to load from path " << path << std::endl ; 
         return 1 ; 
     }
 

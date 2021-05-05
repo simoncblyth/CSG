@@ -175,6 +175,10 @@ struct CSGNode
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
+
+    static std::string Addr(unsigned repeatIdx, unsigned primIdx, unsigned partIdxRel ); 
+
+    static std::string Desc(const float* fval, int numval=6, int wid=7, int prec=1 ); 
     std::string desc() const ; 
     static void Dump(const CSGNode* n, unsigned ni, const char* label);  
 

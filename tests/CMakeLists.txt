@@ -9,6 +9,7 @@ set(TEST_SOURCES
     CSGSolidTest.cc
     CSGFoundryTest.cc
     CSGScanTest.cc
+    TranTest.cc
 )
 
 foreach(SRC ${TEST_SOURCES})

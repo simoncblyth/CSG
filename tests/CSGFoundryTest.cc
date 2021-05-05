@@ -38,8 +38,8 @@ void test_PrimSpec()
         ps.dump(""); 
     }
 
-    std::string bmap = fd.getBashMap(); 
-    std::cout  << bmap << std::endl ; 
+    std::string fdd = fd.desc(); 
+    std::cout << fdd << std::endl ; 
 }
 
 void test_addTran()
@@ -67,16 +67,43 @@ void test_makeClustered()
     std::cout << "]test_makeClustered" << std::endl ; 
 }
 
+void test_Load()
+{
+    CSGFoundry fd ; 
+    fd.makeDemoSolids(); 
 
+    const char* dir = "/tmp" ; 
+    const char* rel = "CSGFoundryTestLoad" ; 
+    fd.write(dir, rel ); 
+ 
+    CSGFoundry* fdl = CSGFoundry::Load(dir, rel); 
+    fdl->dump(); 
+
+    int cmp = CSGFoundry::Compare(&fd, fdl); 
+    std::cout << "test_Load " << cmp << std::endl ; 
+}
+
+void test_Compare()
+{
+    CSGFoundry fd ; 
+    fd.makeDemoSolids(); 
+
+    int cmp = CSGFoundry::Compare(&fd, &fd); 
+    std::cout << "test_Compare " << cmp << std::endl ; 
+}
 
 
 
 int main(int argc, char** argv)
 {
+    /*
     test_layered(); 
     test_PrimSpec(); 
     test_addTran(); 
     test_makeClustered(); 
+    test_Compare(); 
+    */
+    test_Load(); 
 
     return 0 ; 
 }

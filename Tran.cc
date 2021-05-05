@@ -1,3 +1,7 @@
+
+#include <sstream>
+#include <iomanip>
+
 #include "Tran.h"
 #include <glm/gtx/transform.hpp>
 
@@ -61,6 +65,9 @@ const Tran<T>* Tran<T>::product(const Tran<T>* a, const Tran<T>* b, const Tran<T
 }
 
 
+
+
+
 /**
 Tran::product
 --------------
@@ -106,6 +113,52 @@ Tran<T>::Tran( const glm::tmat4x4<T>& transform, const glm::tmat4x4<T>& inverse 
     i(transform*inverse)
 {
 } 
+
+
+template<typename T>
+bool Tran<T>::is_identity(char mat, T epsilon) const 
+{
+    const glm::mat4& m = mat == 't' ? t : ( mat == 'v' ? v : i ) ; 
+    unsigned mismatch = 0 ; 
+    for(int j=0 ; j < 4 ; j++ ) 
+    for(int k=0 ; k < 4 ; k++ ) 
+    {
+        T val = m[j][k] ; 
+        T xval = j == k ? T(1) : T(0) ; 
+        if( std::abs( val - xval ) > epsilon )  mismatch += 1 ; 
+    }
+    return mismatch == 0 ; 
+}
+
+
+template<typename T>
+std::string Tran<T>::brief(bool only_tlate, char mat, unsigned wid, unsigned prec) const 
+{
+    std::stringstream ss ; 
+    ss << mat << ":" ; 
+    if(is_identity(mat)) 
+    {
+       ss << "identity" ; 
+    }
+    else
+    {
+        const glm::mat4& m = mat == 't' ? t : ( mat == 'v' ? v : i ) ; 
+        int j0 = only_tlate ? 3 : 0 ; 
+        for(int j=j0 ; j < 4 ; j++ ) 
+        {
+            ss << "[" ;
+            for(int k=0 ; k < 4 ; k++ ) ss << std::setw(wid) << std::fixed << std::setprecision(prec) << m[j][k] << " " ; 
+            ss << "]" ; 
+        }
+    }
+    std::string s = ss.str() ; 
+    return s ; 
+}
+
+
+
+
+
 
 template struct Tran<float> ;
 template struct Tran<double> ;

@@ -15,9 +15,10 @@
 #include "AABB.h"
 
 
+const unsigned CSGFoundry::IMAX = 50000 ; 
+
 CSGFoundry::CSGFoundry()
     :
-    imax(50000),
     d_solid(nullptr),
     d_prim(nullptr),
     d_node(nullptr),
@@ -31,12 +32,12 @@ CSGFoundry::CSGFoundry()
 void CSGFoundry::init()
 {
     // without sufficient reserved the vectors may reallocate on any push_back invalidating prior pointers 
-    solid.reserve(imax); 
-    prim.reserve(imax); 
-    node.reserve(imax); 
-    plan.reserve(imax); 
-    tran.reserve(imax); 
-    itra.reserve(imax); 
+    solid.reserve(IMAX); 
+    prim.reserve(IMAX); 
+    node.reserve(IMAX); 
+    plan.reserve(IMAX); 
+    tran.reserve(IMAX); 
+    itra.reserve(IMAX); 
 }
 
 void CSGFoundry::makeDemoSolids()
@@ -59,19 +60,109 @@ void CSGFoundry::makeDemoSolids()
     makeRotatedCylinder();
 }
 
-std::string CSGFoundry::getBashMap()
+std::string CSGFoundry::desc() const 
+{
+    std::stringstream ss ; 
+    ss << "CSGFoundry "
+       << " num_solid " << solid.size()
+       << " num_prim " << prim.size()
+       << " num_node " << node.size()
+       << " num_plan " << plan.size()
+       << " num_tran " << tran.size()
+       << " num_itra " << itra.size()
+       << " num_inst " << inst.size()
+       << " ins " << ins.size()
+       << " gas " << gas.size()
+       << " ias " << ias.size()
+       ;
+
+    return ss.str(); 
+}
+
+
+int CSGFoundry::Compare( const CSGFoundry* a, const CSGFoundry* b )
+{
+    int mismatch = 0 ; 
+    mismatch += CompareVec( "solid", a->solid, b->solid ); 
+    mismatch += CompareVec( "prim" , a->prim , b->prim ); 
+    mismatch += CompareVec( "node" , a->node , b->node ); 
+    mismatch += CompareVec( "plan" , a->plan , b->plan ); 
+    mismatch += CompareVec( "tran" , a->tran , b->tran ); 
+    mismatch += CompareVec( "itra" , a->itra , b->itra ); 
+    mismatch += CompareVec( "inst" , a->inst , b->inst ); 
+    mismatch += CompareVec( "ins"  , a->ins , b->ins ); 
+    mismatch += CompareVec( "gas"  , a->gas , b->gas ); 
+    mismatch += CompareVec( "ias"  , a->ias , b->ias ); 
+    assert( mismatch == 0 ); 
+    return mismatch ; 
+}
+
+
+
+
+template<typename T>
+int CSGFoundry::CompareVec( const char* name, const std::vector<T>& a, const std::vector<T>& b )
+{
+    int mismatch = 0 ; 
+
+    bool size_match = a.size() == b.size() ; 
+    if(!size_match) std::cout << "CSGFoundary::CompareVec " << name << " size_match FAIL " << std::endl ; 
+    if(!size_match) mismatch += 1 ; 
+
+    int data_match = memcmp( a.data(), b.data(), a.size()*sizeof(T) ) ; 
+    if(data_match != 0) std::cout << "CSGFoundary::CompareVec " << name << " sizeof(T) " << sizeof(T) << " data_match FAIL " << std::endl ; 
+    if(data_match != 0) mismatch += 1 ; 
+
+    int byte_match = CompareBytes( a.data(), b.data(), a.size()*sizeof(T) ) ;
+    if(byte_match != 0) std::cout << "CSGFoundary::CompareVec " << name << " sizeof(T) " << sizeof(T) << " byte_match FAIL " << std::endl ; 
+    if(byte_match != 0) mismatch += 1 ; 
+
+    return mismatch ; 
+}
+
+int CSGFoundry::CompareBytes(const void* a, const void* b, unsigned num_bytes)
+{
+    const char* ca = (const char*)a ; 
+    const char* cb = (const char*)b ; 
+    int mismatch = 0 ; 
+    for(int i=0 ; i < int(num_bytes) ; i++ ) if( ca[i] != cb[i] ) mismatch += 1 ; 
+    return mismatch ; 
+}
+
+
+template int CSGFoundry::CompareVec(const char*, const std::vector<CSGSolid>& a, const std::vector<CSGSolid>& b ) ; 
+template int CSGFoundry::CompareVec(const char*, const std::vector<CSGPrim>& a, const std::vector<CSGPrim>& b ) ; 
+template int CSGFoundry::CompareVec(const char*, const std::vector<CSGNode>& a, const std::vector<CSGNode>& b ) ; 
+template int CSGFoundry::CompareVec(const char*, const std::vector<float4>& a, const std::vector<float4>& b ) ; 
+template int CSGFoundry::CompareVec(const char*, const std::vector<qat4>& a, const std::vector<qat4>& b ) ; 
+template int CSGFoundry::CompareVec(const char*, const std::vector<unsigned>& a, const std::vector<unsigned>& b ) ; 
+
+
+void CSGFoundry::summary(const char* msg ) const 
 {
     unsigned num_solids = getNumSolid(); 
-    std::stringstream ss ; 
-    ss << "#CSGFoundry::getBashMap " << std::endl ; 
-    ss << "declare -A map " << std::endl ;  
+    std::cout 
+        << msg
+        << " num_solid " << solid.size()
+        << " num_solids " << num_solids
+        << std::endl 
+        ;
+
+    std::cout << " solids " << std::endl ;  ; 
     for(unsigned i=0 ; i < num_solids ; i++)
     {
         const CSGSolid* so = getSolid(i); 
-        ss << "map[" << i << "]=" << so->label << std::endl ; 
+        std::string l4(so->label, 4);  
+        std::cout <<  "[" << l4 << "]" << so->center_extent << " " << so->desc() << std::endl  ;
     }
-    return ss.str(); 
+    for(unsigned i=0 ; i < num_solids ; i++)
+    {
+        const CSGSolid* so = getSolid(i); 
+        std::string l4(so->label, 4);  
+        std::cout <<  "[" << l4 << "]" << so->numPrim << " " <<  so->primOffset << std::endl ; 
+    }
 }
+
 
 
 void CSGFoundry::dump() const 
@@ -281,14 +372,14 @@ CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
 
     unsigned idx = node.size() ;  
 
-    bool in_range = idx < imax  ;
+    bool in_range = idx < IMAX  ;
     if(!in_range)
     {
         std::cout 
             << "CSGFoundry::addNode"
             << " FATAL : OUT OF RANGE "
             << " idx " << idx 
-            << " imax " << imax
+            << " IMAX " << IMAX
             << std::endl  
             ;
     }
@@ -301,7 +392,7 @@ CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
 float4* CSGFoundry::addPlan(const float4& pl )
 {
     unsigned idx = plan.size(); 
-    assert( idx < imax ); 
+    assert( idx < IMAX ); 
     plan.push_back(pl); 
     return plan.data() + idx ; 
 }
@@ -312,18 +403,21 @@ unsigned CSGFoundry::addTran( const Tran<T>& tr  )
     qat4 t(glm::value_ptr(tr.t));  // narrowing when T=double
     qat4 v(glm::value_ptr(tr.v)); 
 
-    unsigned idx = tran.size(); 
-
-    /*
-    std::cout << "CSGFoundry::addTran idx " << idx << std::endl ; 
-    std::cout << " t " << t << std::endl ; 
-    std::cout << " v " << v << std::endl ; 
-    */
+    unsigned idx = tran.size();   // size before push_back 
+    bool dump = false ; 
+    if(dump)
+    {
+        std::cout 
+            << "CSGFoundry::addTran"
+            << " idx " << idx 
+            << " tr " << tr.brief()
+            << std::endl
+            ; 
+    }
 
     assert( tran.size() == itra.size()) ; 
     tran.push_back(t); 
     itra.push_back(v); 
-
     return idx ;  
 }
 
@@ -339,7 +433,7 @@ CSGNode* CSGFoundry::addNodes(const std::vector<CSGNode>& nds )
     {
         const CSGNode& nd = nds[i]; 
         idx = node.size() ;  
-        assert( idx < imax ); 
+        assert( idx < IMAX ); 
         node.push_back(nd); 
     }
     return node.data() + idx ; 
@@ -363,10 +457,11 @@ CSGPrim* CSGFoundry::addPrim(int num_node)
     pr.setNodeOffset(node.size()); 
     pr.setTranOffset(tran.size()); 
     pr.setPlanOffset(plan.size()); 
+
     pr.setSbtIndexOffset(0) ; 
 
     unsigned primIdx = prim.size(); 
-    assert( primIdx < imax ); 
+    assert( primIdx < IMAX ); 
     prim.push_back(pr); 
     return prim.data() + primIdx ; 
 }
@@ -385,7 +480,7 @@ for the solid.
 CSGSolid* CSGFoundry::addSolid(unsigned num_prim, const char* label )
 {
     unsigned idx = solid.size(); 
-    assert( idx < imax ); 
+    assert( idx < IMAX ); 
 
     unsigned primOffset = prim.size(); 
     CSGSolid so = {} ; 
@@ -802,45 +897,91 @@ CSGSolid* CSGFoundry::makeConvexPolyhedronTetrahedron(const char* label, float e
 
 
 
-
-
-
-
-
 void CSGFoundry::write(const char* base, const char* rel) const 
 {
     std::stringstream ss ;   
     ss << base << "/" << rel ; 
     std::string dir = ss.str();   
 
-    std::cout << "CSGFoundry::write " << dir << std::endl ; 
-
-    NP::Write(dir.c_str(), "solid.npy",  (int*)solid.data(),  solid.size(),  4, 2 ); 
-    NP::Write(dir.c_str(), "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
-    NP::Write(dir.c_str(), "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
-    NP::Write(dir.c_str(), "plan.npy",   (float*)plan.data(), plan.size(),   4    ); 
-    NP::Write(dir.c_str(), "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
-    NP::Write(dir.c_str(), "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
-
-    unsigned num_inst = inst.size(); 
-    if( num_inst > 0 )
-    NP::Write(dir.c_str(), "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
+    std::cout << "CSGFoundry::write " << dir << " plan.size " << plan.size() << std::endl ; 
+              
+    if(solid.size() > 0 ) NP::Write(dir.c_str(), "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
+    if(prim.size() > 0 ) NP::Write(dir.c_str(), "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
+    if(node.size() > 0 ) NP::Write(dir.c_str(), "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
+    if(plan.size() > 0 ) NP::Write(dir.c_str(), "plan.npy",   (float*)plan.data(), plan.size(),   1, 4 ); 
+    if(tran.size() > 0 ) NP::Write(dir.c_str(), "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
+    if(itra.size() > 0 ) NP::Write(dir.c_str(), "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
+    if(inst.size() > 0 ) NP::Write(dir.c_str(), "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
 }
+
+CSGFoundry*  CSGFoundry::Load(const char* base, const char* rel) // static
+{
+    CSGFoundry* fd = new CSGFoundry();  
+    fd->load(base, rel); 
+    return fd ; 
+} 
+
+void CSGFoundry::load( const char* base, const char* rel )
+{
+    std::stringstream ss ;   
+    ss << base << "/" << rel ; 
+    std::string dir = ss.str();   
+
+    std::cout << "[ CSGFoundry::load " << dir << std::endl ; 
+
+    loadArray( solid , dir.c_str(), "solid.npy" ); 
+    loadArray( prim  , dir.c_str(), "prim.npy" ); 
+    loadArray( node  , dir.c_str(), "node.npy" ); 
+    loadArray( plan  , dir.c_str(), "plan.npy" ); 
+    loadArray( tran  , dir.c_str(), "tran.npy" ); 
+    loadArray( itra  , dir.c_str(), "itra.npy" ); 
+    loadArray( inst  , dir.c_str(), "inst.npy" ); 
+
+    std::cout << "] CSGFoundry::load " << dir.c_str() << std::endl ; 
+}
+
+
+template<typename T>
+void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* name )
+{
+    NP* a = NP::Load(dir, name);
+    bool quiet = false ; 
+    if(a == nullptr)
+    { 
+        if(!quiet) std::cout << "CSGFoundry::loadArray FAIL for " << dir <<  "/" << name << std::endl ; 
+    }
+    else
+    { 
+        assert( a->shape.size()  == 3 ); 
+        unsigned ni = a->shape[0] ; 
+        unsigned nj = a->shape[1] ; 
+        unsigned nk = a->shape[2] ; 
+
+        if(!quiet) std::cout 
+                << "CSGFoundry::loadArray"
+                << " ni " << ni 
+                << " nj " << nj 
+                << " nk " << nk 
+                << " " << dir <<  "/" << name 
+                << std::endl ; 
+
+        vec.clear(); 
+        vec.resize(ni); 
+        memcpy( vec.data(),  a->bytes(), sizeof(T)*ni ); 
+    }
+}
+
+template void CSGFoundry::loadArray( std::vector<CSGSolid>& , const char* , const char* ); 
+template void CSGFoundry::loadArray( std::vector<CSGPrim>& , const char* , const char* ); 
+template void CSGFoundry::loadArray( std::vector<CSGNode>& , const char* , const char* ); 
+template void CSGFoundry::loadArray( std::vector<float4>& , const char* , const char* ); 
+template void CSGFoundry::loadArray( std::vector<qat4>& , const char* , const char* ); 
+
 
 void CSGFoundry::upload()
 {
-    std::cout 
-        << "CSGFoundry::upload"
-        << " num_solid " << solid.size()
-        << " num_prim " << prim.size()
-        << " num_node " << node.size()
-        << " num_plan " << plan.size()
-        << " num_tran " << tran.size()
-        << " num_itra " << itra.size()
-        << " num_inst " << inst.size()
-        << std::endl
-        ;
-
+    inst_find_unique(); 
+    std::cout << "[ CSGFoundry::upload " << desc() << std::endl ; 
     assert( tran.size() == itra.size() ); 
 
     d_solid = solid.size() > 0 ? CU::UploadArray<CSGSolid>(solid.data(), solid.size() ) : nullptr ; 
@@ -850,22 +991,13 @@ void CSGFoundry::upload()
     d_tran = tran.size() > 0 ? CU::UploadArray<qat4>(tran.data(), tran.size() ) : nullptr ; 
     d_itra = itra.size() > 0 ? CU::UploadArray<qat4>(itra.data(), itra.size() ) : nullptr ; 
 
+    std::cout << "] CSGFoundry::upload "  << std::endl ; 
     // note that d_solid and d_tran are not actually used on GPU currently 
-
-    inst_find_unique(); 
 }
 
 void CSGFoundry::inst_find_unique()
 {
     qat4::find_unique( inst, ins, gas, ias ); 
-    std::cout 
-        << "CSGFoundry::inst_find_unique"
-        << " num_inst " << inst.size()
-        << " ins " << ins.size()
-        << " gas " << gas.size()
-        << " ias " << ias.size()
-        << std::endl
-        ;
 }
 
 unsigned CSGFoundry::getNumUniqueIAS() const
@@ -890,7 +1022,6 @@ void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned 
 {
     qat4::select_instances_ias(inst, ias_inst, ias_idx ) ;
 }
-
 
 
 
