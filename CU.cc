@@ -47,7 +47,6 @@ T* CU::DownloadArray(const T* d_array, unsigned num_items ) // static
 }
 
 
-
 template float* CU::UploadArray<float>(const float* array, unsigned num_items) ;
 template float* CU::DownloadArray<float>(const float* d_array, unsigned num_items) ;
 
@@ -71,6 +70,41 @@ template CSGPrim* CU::DownloadArray<CSGPrim>(const CSGPrim* d_array, unsigned nu
 
 template CSGSolid* CU::UploadArray<CSGSolid>(const CSGSolid* d_array, unsigned num_items) ;
 template CSGSolid* CU::DownloadArray<CSGSolid>(const CSGSolid* d_array, unsigned num_items) ;
+
+
+
+
+
+template <typename T>
+T* CU::UploadVec(const std::vector<T>& vec)
+{
+    unsigned num_items = vec.size() ; 
+    unsigned num_bytes = num_items*sizeof(T) ; 
+    std::cout << "CU::UploadVec num_items " << num_items << std::endl ; 
+    T* d_array = nullptr ; 
+    CUDA_CHECK( cudaMalloc(reinterpret_cast<void**>( &d_array ), num_bytes ));
+    CUDA_CHECK( cudaMemcpy(reinterpret_cast<void*>( d_array ), vec.data(), num_bytes, cudaMemcpyHostToDevice ));
+    return d_array ; 
+}
+
+template CSGPrim* CU::UploadVec<CSGPrim>(const std::vector<CSGPrim>& vec ) ;
+template float*     CU::UploadVec<float>(const std::vector<float>& vec ) ;
+template unsigned*  CU::UploadVec<unsigned>(const std::vector<unsigned>& vec ) ;
+
+
+template <typename T>
+void CU::DownloadVec(std::vector<T>& vec, const T* d_array, unsigned num_items)  // static
+{
+    std::cout << "CU::DownloadVec num_items " << num_items << std::endl ; 
+    unsigned num_bytes = num_items*sizeof(T) ; 
+    vec.clear(); 
+    vec.resize(num_items); 
+    CUDA_CHECK( cudaMemcpy( vec.data(), d_array, num_bytes, cudaMemcpyDeviceToHost ));
+} 
+
+template void CU::DownloadVec<CSGPrim>(std::vector<CSGPrim>& vec,  const CSGPrim* d_array, unsigned num_items) ;
+template void CU::DownloadVec<float>(std::vector<float>& vec,  const float* d_array, unsigned num_items) ;
+template void CU::DownloadVec<unsigned>(std::vector<unsigned>& vec,  const unsigned* d_array, unsigned num_items) ;
 
 
 

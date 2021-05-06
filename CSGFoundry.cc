@@ -268,10 +268,26 @@ CSGPrimSpec CSGFoundry::getPrimSpecHost(unsigned solidIdx) const
 CSGPrimSpec CSGFoundry::getPrimSpecDevice(unsigned solidIdx) const 
 {
     assert( d_prim ); 
-    const CSGSolid* so = solid.data() + solidIdx ; 
+    const CSGSolid* so = solid.data() + solidIdx ;  // get the primOffset from CPU side solid
     CSGPrimSpec ps = CSGPrim::MakeSpec( d_prim,  so->primOffset, so->numPrim ); ; 
     ps.device = true ; 
     return ps ; 
+}
+
+void CSGFoundry::checkPrimSpec(unsigned solidIdx) const 
+{
+    CSGPrimSpec ps = getPrimSpec(solidIdx);  
+    std::cout << "[ CSGFoundry::checkPrimSpec " << solidIdx << std::endl ; 
+    ps.downloadDump(); 
+    std::cout << "] CSGFoundry::checkPrimSpec " << solidIdx << std::endl ; 
+}
+
+void CSGFoundry::checkPrimSpec() const 
+{
+    for(unsigned solidIdx = 0 ; solidIdx < getNumSolid() ; solidIdx++)
+    {
+        checkPrimSpec(solidIdx); 
+    }
 }
 
 
@@ -349,6 +365,7 @@ CSGSolid* CSGFoundry::make(const char* name)
     else if(strcmp(name, "ibsp") == 0) so = makeIntersectionBoxSphere(name) ;
     else if(strcmp(name, "dbsp") == 0) so = makeDifferenceBoxSphere(name) ;
     else if(strcmp(name, "rcyl") == 0) so = makeRotatedCylinder(name) ;
+    else std::cout << "CSGFoundry::make FATAL invalid name [" << name << "]" << std::endl ; 
     assert( so ); 
     return so ;  
 }

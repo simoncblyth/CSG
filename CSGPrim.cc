@@ -34,6 +34,7 @@ std::string CSGPrim::desc() const
 }
 
 
+
 CSGPrimSpec CSGPrim::MakeSpec( const CSGPrim* prim0,  unsigned primIdx, unsigned numPrim ) // static 
 {
     const CSGPrim* prim = prim0 + primIdx ; 

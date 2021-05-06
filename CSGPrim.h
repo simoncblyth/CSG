@@ -87,8 +87,13 @@ struct CSGPrim
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
+
+    static int value_offsetof_sbtIndexOffset(){ return offsetof(CSGPrim, q1.u.x)/4 ; }
+    static int value_offsetof_AABB(){           return offsetof(CSGPrim, q2.f.x)/4 ; }
+
+
     std::string desc() const ; 
-    static CSGPrimSpec MakeSpec( const CSGPrim* prim, unsigned primIdx, unsigned numPrim ) ; 
+    static CSGPrimSpec MakeSpec( const CSGPrim* prim0, unsigned primIdx, unsigned numPrim ) ; 
 #endif
 
 };

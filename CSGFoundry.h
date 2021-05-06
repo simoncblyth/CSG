@@ -49,10 +49,13 @@ struct CSGFoundry
     CSGPrimSpec getPrimSpec(       unsigned solidIdx) const ;
     CSGPrimSpec getPrimSpecHost(   unsigned solidIdx) const ;
     CSGPrimSpec getPrimSpecDevice( unsigned solidIdx) const ;
+    void        checkPrimSpec(     unsigned solidIdx) const ;
+    void        checkPrimSpec() const ;
+
 
     const CSGSolid*   getSolidByName(const char* name) const ;
     const CSGSolid*   getSolid_(int solidIdx) const ;   // -ve counts from back 
-    unsigned       getSolidIdx(const CSGSolid* so) const ; 
+    unsigned          getSolidIdx(const CSGSolid* so) const ; 
 
     unsigned getNumSolid() const; 
     unsigned getNumPrim() const;   
