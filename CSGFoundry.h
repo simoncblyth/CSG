@@ -24,6 +24,7 @@ struct CSGFoundry
 {
     static const unsigned IMAX ; 
     static CSGFoundry* Load(const char* base, const char* rel);
+    static CSGFoundry* Load(const char* dir );
     static int Compare(const CSGFoundry* a , const CSGFoundry* b ); 
 
     template<typename T>
@@ -110,8 +111,10 @@ struct CSGFoundry
 
     static float4 TriPlane( const std::vector<float3>& v, unsigned i, unsigned j, unsigned k );
 
+    void write(const char* dir) const ;
     void write(const char* base, const char* rel) const ;
     void load( const char* base, const char* rel ) ; 
+    void load( const char* dir ) ; 
 
     template<typename T> void loadArray( std::vector<T>& vec, const char* dir, const char* name ); 
 

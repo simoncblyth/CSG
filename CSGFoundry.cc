@@ -895,24 +895,34 @@ CSGSolid* CSGFoundry::makeConvexPolyhedronTetrahedron(const char* label, float e
     return makeSolid11(label, nd, &pl ); 
 }
 
-
-
 void CSGFoundry::write(const char* base, const char* rel) const 
 {
     std::stringstream ss ;   
     ss << base << "/" << rel ; 
     std::string dir = ss.str();   
-
-    std::cout << "CSGFoundry::write " << dir << " plan.size " << plan.size() << std::endl ; 
-              
-    if(solid.size() > 0 ) NP::Write(dir.c_str(), "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
-    if(prim.size() > 0 ) NP::Write(dir.c_str(), "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
-    if(node.size() > 0 ) NP::Write(dir.c_str(), "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
-    if(plan.size() > 0 ) NP::Write(dir.c_str(), "plan.npy",   (float*)plan.data(), plan.size(),   1, 4 ); 
-    if(tran.size() > 0 ) NP::Write(dir.c_str(), "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
-    if(itra.size() > 0 ) NP::Write(dir.c_str(), "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
-    if(inst.size() > 0 ) NP::Write(dir.c_str(), "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
+    write(dir.c_str()); 
 }
+void CSGFoundry::write(const char* dir) const 
+{
+    std::cout << "CSGFoundry::write " << dir << std::endl ; 
+              
+    if(solid.size() > 0 ) NP::Write(dir, "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
+    if(prim.size() > 0 ) NP::Write(dir, "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
+    if(node.size() > 0 ) NP::Write(dir, "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
+    if(plan.size() > 0 ) NP::Write(dir, "plan.npy",   (float*)plan.data(), plan.size(),   1, 4 ); 
+    if(tran.size() > 0 ) NP::Write(dir, "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
+    if(itra.size() > 0 ) NP::Write(dir, "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
+    if(inst.size() > 0 ) NP::Write(dir, "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
+}
+
+
+
+CSGFoundry*  CSGFoundry::Load(const char* dir) // static
+{
+    CSGFoundry* fd = new CSGFoundry();  
+    fd->load(dir); 
+    return fd ; 
+} 
 
 CSGFoundry*  CSGFoundry::Load(const char* base, const char* rel) // static
 {
@@ -927,17 +937,22 @@ void CSGFoundry::load( const char* base, const char* rel )
     ss << base << "/" << rel ; 
     std::string dir = ss.str();   
 
+    load( dir.c_str() ); 
+}
+
+void CSGFoundry::load( const char* dir )
+{
     std::cout << "[ CSGFoundry::load " << dir << std::endl ; 
 
-    loadArray( solid , dir.c_str(), "solid.npy" ); 
-    loadArray( prim  , dir.c_str(), "prim.npy" ); 
-    loadArray( node  , dir.c_str(), "node.npy" ); 
-    loadArray( plan  , dir.c_str(), "plan.npy" ); 
-    loadArray( tran  , dir.c_str(), "tran.npy" ); 
-    loadArray( itra  , dir.c_str(), "itra.npy" ); 
-    loadArray( inst  , dir.c_str(), "inst.npy" ); 
+    loadArray( solid , dir, "solid.npy" ); 
+    loadArray( prim  , dir, "prim.npy" ); 
+    loadArray( node  , dir, "node.npy" ); 
+    loadArray( plan  , dir, "plan.npy" ); 
+    loadArray( tran  , dir, "tran.npy" ); 
+    loadArray( itra  , dir, "itra.npy" ); 
+    loadArray( inst  , dir, "inst.npy" ); 
 
-    std::cout << "] CSGFoundry::load " << dir.c_str() << std::endl ; 
+    std::cout << "] CSGFoundry::load " << dir << std::endl ; 
 }
 
 
