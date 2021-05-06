@@ -947,10 +947,11 @@ void CSGFoundry::load( const char* dir )
     loadArray( solid , dir, "solid.npy" ); 
     loadArray( prim  , dir, "prim.npy" ); 
     loadArray( node  , dir, "node.npy" ); 
-    loadArray( plan  , dir, "plan.npy" ); 
     loadArray( tran  , dir, "tran.npy" ); 
     loadArray( itra  , dir, "itra.npy" ); 
     loadArray( inst  , dir, "inst.npy" ); 
+
+    loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
 
     std::cout << "] CSGFoundry::load " << dir << std::endl ; 
 }
@@ -974,9 +975,9 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
 
         if(!quiet) std::cout 
                 << "CSGFoundry::loadArray"
-                << " ni " << ni 
-                << " nj " << nj 
-                << " nk " << nk 
+                << " ni " << std::setw(5) << ni 
+                << " nj " << std::setw(1) << nj 
+                << " nk " << std::setw(1) << nk 
                 << " " << dir <<  "/" << name 
                 << std::endl ; 
 
