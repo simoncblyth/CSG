@@ -50,7 +50,7 @@ list(APPEND SOURCES
     Tran.cc
     CSGFoundry.cc
     CSGScan.cc
-    View.cc
+    CSGView.cc
 )
 
 list(APPEND CSG_HEADERS
@@ -71,7 +71,7 @@ list(APPEND CSG_HEADERS
 
     CSGFoundry.h
     CSGScan.h
-    View.h
+    CSGView.h
 )
 
 list(APPEND INTERSECT_HEADERS

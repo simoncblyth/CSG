@@ -5,9 +5,9 @@
 
 #include <glm/gtx/transform.hpp>
 #include "NP.hh"
-#include "View.h"
+#include "CSGView.h"
 
-void View::update(const glm::vec4& em, const glm::vec4& ce, const unsigned width, const unsigned height)
+void CSGView::update(const glm::vec4& em, const glm::vec4& ce, const unsigned width, const unsigned height)
 {
     eye_model = em ; 
     center_extent = ce ; 
@@ -19,7 +19,7 @@ void View::update(const glm::vec4& em, const glm::vec4& ce, const unsigned width
     glm::mat4 model2world = glm::scale(glm::translate(glm::mat4(1.0), tr), sc);
     //glm::mat4 world2model = glm::translate( glm::scale(glm::mat4(1.0), isc), -tr);
 
-   // View::getTransforms
+   // CSGView::getTransforms
     glm::vec4 eye_m( em.x,em.y,em.z,1.f);  //  viewpoint in unit model frame 
     glm::vec4 look_m( 0.f, 0.f,0.f,1.f); 
     glm::vec4 up_m(   0.f, 0.f,1.f,1.f); 
@@ -47,7 +47,7 @@ void View::update(const glm::vec4& em, const glm::vec4& ce, const unsigned width
     W = glm::vec4( forward_ax * gazelength, 0.f) ; 
 }
 
-void View::dump(const char* msg) const 
+void CSGView::dump(const char* msg) const 
 {
     std::cout << msg << std::endl ; 
     std::cout << desc("eye_model", eye_model ) << std::endl; 
@@ -61,7 +61,7 @@ void View::dump(const char* msg) const
     std::cout << desc("W", W ) << std::endl; 
 }
 
-std::string View::desc( const char* label, const glm::vec4& v ) // static
+std::string CSGView::desc( const char* label, const glm::vec4& v ) // static
 {
     std::stringstream ss ; 
     ss 
@@ -78,9 +78,9 @@ std::string View::desc( const char* label, const glm::vec4& v ) // static
     return s ;
 }
 
-void View::save(const char* dir) const 
+void CSGView::save(const char* dir) const 
 {
-    std::cout << "View::save " << dir << std::endl ;  
+    std::cout << "CSGView::save " << dir << std::endl ;  
     NP view("<f4", 9, 4); 
     float* f = view.values<float>() ; 
 
@@ -100,7 +100,7 @@ void View::save(const char* dir) const
     NP::WriteNames(dir, "view.txt", names); 
 }
 
-void View::collect4( float* f, unsigned i, const glm::vec4& v ) // static
+void CSGView::collect4( float* f, unsigned i, const glm::vec4& v ) // static
 {
     *(f+4*i+0) = v.x ; 
     *(f+4*i+1) = v.y ; 

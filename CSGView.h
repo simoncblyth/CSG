@@ -3,7 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-struct View
+struct CSGView
 {
     glm::vec4 eye_model ; 
     glm::vec4 center_extent ; 
@@ -16,7 +16,7 @@ struct View
     glm::vec4 W ; 
 
     void update(const glm::vec4& eye_model, const glm::vec4& ce, const unsigned width, const unsigned height ); 
-    void dump(const char* msg="View::dump") const ;
+    void dump(const char* msg="CSGView::dump") const ;
     void save(const char* dir) const ;
 
     static std::string desc( const char* label, const glm::vec4& v );
