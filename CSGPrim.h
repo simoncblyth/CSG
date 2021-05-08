@@ -25,7 +25,7 @@
     | q0 |                |                |                |                |                                                 |
     |    |                |                |                |                |                                                 |
     +----+----------------+----------------+----------------+----------------+-------------------------------------------------+
-    |    | sbtIndexOffset |                |                |                |                                                 |
+    |    | sbtIndexOffset |  meshIdx       |                |                |                                                 |
     |    |                |                |                |                |                                                 |
     | q1 |                |                |                |                |                                                 |
     |    |                |                |                |                |                                                 |
@@ -62,6 +62,8 @@ struct CSGPrim
     PRIM_METHOD int  tranOffset() const { return q0.i.z ; }
     PRIM_METHOD int  planOffset() const { return q0.i.w ; }
 
+
+
     PRIM_METHOD void setNumNode(   int numNode){    q0.i.x = numNode ; }
     PRIM_METHOD void setNodeOffset(int nodeOffset){ q0.i.y = nodeOffset ; }
     PRIM_METHOD void setTranOffset(int tranOffset){ q0.i.z = tranOffset ; }
@@ -69,6 +71,11 @@ struct CSGPrim
 
     PRIM_METHOD unsigned  sbtIndexOffset()    const { return  q1.u.x ; }
     PRIM_METHOD void   setSbtIndexOffset(unsigned sbtIndexOffset){  q1.u.x = sbtIndexOffset ; }
+
+    PRIM_METHOD unsigned  meshIdx() const {           return q1.u.y ; }  // aka lvIdx
+    PRIM_METHOD void   setMeshIdx(unsigned midx){     q1.u.y = midx ; }
+
+
 
     PRIM_METHOD const unsigned* sbtIndexOffsetPtr() const { return &q1.u.x ; }
 

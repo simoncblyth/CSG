@@ -48,6 +48,8 @@ struct CSGFoundry
     void dump() const ;
     void dumpSolid(unsigned solidIdx ) const ;
     void dumpPrim(unsigned solidIdx ) const ;
+    std::string descPrim(unsigned solidIdx) const  ;
+
     void dumpNode(unsigned solidIdx ) const ;
 
     CSGPrimSpec getPrimSpec(       unsigned solidIdx) const ;
@@ -77,8 +79,12 @@ struct CSGFoundry
     const qat4*       getItra(unsigned itraIdx) const ;
     const qat4*       getInst(unsigned instIdx) const ;
 
+    const CSGPrim*    getSolidPrim(unsigned solidIdx, unsigned primIdxRel) const ;
+    const CSGNode*    getSolidPrimNode(unsigned solidIdx, unsigned primIdxRel, unsigned nodeIdxRel) const ;
+
+
     CSGSolid* addSolid(unsigned num_prim, const char* label );
-    CSGPrim*  addPrim(int num_node) ;
+    CSGPrim*  addPrim(int num_node, int meshIdx=-1) ;
     CSGNode*  addNode(CSGNode nd, const std::vector<float4>* pl=nullptr );
     CSGNode*  addNodes(const std::vector<CSGNode>& nds );
     float4*   addPlan(const float4& pl );

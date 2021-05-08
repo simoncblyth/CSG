@@ -224,20 +224,51 @@ void CSGFoundry::dumpSolid(unsigned solidIdx) const
     } 
 }
 
+
+
+std::string CSGFoundry::descPrim(unsigned solidIdx) const 
+{
+    const CSGSolid* so = getSolid(solidIdx); 
+    std::stringstream ss ; 
+    ss << ( so ? so->desc() : "NULL" ) ;  
+    if(so)
+    {
+       if(so->numPrim > 1 ) ss << std::endl ;  
+        for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
+        {
+            const CSGPrim* pr = getPrim(primIdx) ;  
+            assert(pr) ; 
+            ss << " primIdx " << std::setw(3) << primIdx << " " << pr->desc() << std::endl ; 
+        } 
+    }
+    std::string s = ss.str(); 
+    return s ; 
+}
+
 void CSGFoundry::dumpPrim(unsigned solidIdx) const 
 {
-    const CSGSolid* so = solid.data() + solidIdx ; 
-    LOG(info) << so->desc() ; 
-    if( so->numPrim > 1 ) LOG(info)  ; 
-    for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
-    {
-        const CSGPrim* pr = prim.data() + primIdx ; 
-        LOG(info) 
-            << " primIdx " << std::setw(3) << primIdx << " "
-            << pr->desc() 
-            ; 
-    } 
+    std::string s = descPrim(solidIdx); 
+    LOG(info) << s ;
 }
+
+
+const CSGPrim*  CSGFoundry::getSolidPrim(unsigned solidIdx, unsigned primIdxRel) const 
+{
+    const CSGSolid* so = getSolid(solidIdx); 
+    assert(so); 
+
+    unsigned primIdx = so->primOffset + primIdxRel ; 
+    const CSGPrim* pr = getPrim(primIdx); 
+    assert(pr); 
+
+    return pr ; 
+}
+
+
+
+
+
+
 
 void CSGFoundry::dumpNode(unsigned solidIdx) const 
 {
@@ -260,6 +291,15 @@ void CSGFoundry::dumpNode(unsigned solidIdx) const
     } 
 }
 
+const CSGNode* CSGFoundry::getSolidPrimNode(unsigned solidIdx, unsigned primIdxRel, unsigned nodeIdxRel) const 
+{
+    const CSGPrim* pr = getSolidPrim(solidIdx, primIdxRel); 
+    assert(pr); 
+    unsigned nodeIdx = pr->nodeOffset() + nodeIdxRel ; 
+    const CSGNode* nd = getNode(nodeIdx); 
+    assert(nd); 
+    return nd ; 
+}   
 
 
 
@@ -487,7 +527,7 @@ tran or plan needed for a prim.
 
 **/
 
-CSGPrim* CSGFoundry::addPrim(int num_node)  
+CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx)  
 {
     CSGPrim pr = {} ;
     pr.setNumNode(num_node) ; 
@@ -496,6 +536,7 @@ CSGPrim* CSGFoundry::addPrim(int num_node)
     pr.setPlanOffset(plan.size()); 
 
     pr.setSbtIndexOffset(0) ; 
+    pr.setMeshIdx(meshIdx) ; 
 
     unsigned primIdx = prim.size(); 
     assert( primIdx < IMAX ); 
