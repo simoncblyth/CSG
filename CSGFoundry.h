@@ -37,7 +37,11 @@ struct CSGFoundry
     void init(); 
 
     void makeDemoSolids() ;
+    void makeDemoGrid();
+
     std::string desc() const ;
+    std::string descGAS() const ;
+
     void summary(const char* msg="CSGFoundry::summary") const ;
 
 
@@ -127,8 +131,15 @@ struct CSGFoundry
     unsigned getNumUniqueIAS() const ;
     unsigned getNumUniqueGAS() const ;
     unsigned getNumUniqueINS() const ;
+
     unsigned getNumInstancesIAS(unsigned ias_idx) const ;
-    void     getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx ) const ;
+    void     getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx ) const ;
+
+    unsigned getNumInstancesGAS(unsigned gas_idx) const ;
+    void     getInstanceTransformsGAS(std::vector<qat4>& select_inst, unsigned gas_idx ) const ;
+
+    const qat4* getInstanceGAS(unsigned gas_idx_ , unsigned ordinal=0) ;
+
 
     std::vector<CSGSolid>  solid ;   
     std::vector<CSGPrim>   prim ; 

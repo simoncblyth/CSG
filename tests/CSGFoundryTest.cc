@@ -5,6 +5,9 @@
 
 #include "sutil_vec_math.h"
 #include "CSGFoundry.h"
+#include "qat4.h"
+
+#include "OPTICKS_LOG.hh"
 
 
 void test_layered()
@@ -92,18 +95,57 @@ void test_Compare()
     std::cout << "test_Compare " << cmp << std::endl ; 
 }
 
+void test_getInstanceTransformsGAS()
+{
+    CSGFoundry fd ; 
+    fd.makeDemoGrid(); 
+    fd.inst_find_unique(); 
+    LOG(info) << fd.descGAS() ; 
+
+    unsigned gas_idx = fd.getNumSolid()/2 ; 
+
+    std::vector<qat4> sel ;  
+    fd.getInstanceTransformsGAS(sel, gas_idx ); 
+
+    LOG(info) 
+        << " gas_idx " << gas_idx 
+        << " sel.size " << sel.size()
+        ; 
+
+    qat4::dump(sel); 
+
+}
+
+void test_getInstanceGAS()
+{
+    CSGFoundry fd ; 
+    fd.makeDemoGrid(); 
+    LOG(info) << fd.descGAS() ; 
+
+    unsigned gas_idx = fd.getNumSolid()/2 ; 
+    unsigned ordinal = 0 ; 
+
+    const qat4* q = fd.getInstanceGAS(gas_idx, ordinal); 
+
+    assert(q) ; 
+    LOG(info) << *q ; 
+}
 
 
 int main(int argc, char** argv)
 {
+    OPTICKS_LOG(argc, argv); 
     /*
     test_layered(); 
     test_PrimSpec(); 
     test_addTran(); 
     test_makeClustered(); 
     test_Compare(); 
-    */
     test_Load(); 
+    test_getInstanceTransformsGAS() ;
+    */
+
+    test_getInstanceGAS() ;
 
     return 0 ; 
 }

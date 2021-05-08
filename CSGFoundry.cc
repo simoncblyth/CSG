@@ -14,6 +14,8 @@
 #include "CSGFoundry.h"
 #include "AABB.h"
 
+#include "PLOG.hh"
+
 
 const unsigned CSGFoundry::IMAX = 50000 ; 
 
@@ -60,6 +62,39 @@ void CSGFoundry::makeDemoSolids()
     makeRotatedCylinder();
 }
 
+void CSGFoundry::makeDemoGrid()
+{
+    makeDemoSolids(); 
+    unsigned num_solids = getNumSolid(); 
+    LOG(info) << " num_solids " << num_solids ; 
+
+    float gridscale = 100.f ; 
+    std::array<int,9> grid = { -10,11,2,  -10,11,2, -10,11,2  } ;
+
+    unsigned ias_idx = 0 ; 
+    unsigned count = 0 ; 
+
+    for(int i=grid[0] ; i < grid[1] ; i+=grid[2] ){
+    for(int j=grid[3] ; j < grid[4] ; j+=grid[5] ){
+    for(int k=grid[6] ; k < grid[7] ; k+=grid[8] ){
+
+        qat4 instance  ;   
+        instance.q3.f.x = float(i)*gridscale ; 
+        instance.q3.f.y = float(j)*gridscale ; 
+        instance.q3.f.z = float(k)*gridscale ; 
+        
+        unsigned ins_idx = inst.size() ;    
+        unsigned gas_idx = count % num_solids ; 
+
+        instance.setIdentity( ins_idx, gas_idx, ias_idx );  
+        inst.push_back( instance );  
+     
+        count++ ; 
+    }   
+    }   
+    }   
+}
+
 std::string CSGFoundry::desc() const 
 {
     std::stringstream ss ; 
@@ -103,15 +138,15 @@ int CSGFoundry::CompareVec( const char* name, const std::vector<T>& a, const std
     int mismatch = 0 ; 
 
     bool size_match = a.size() == b.size() ; 
-    if(!size_match) std::cout << "CSGFoundary::CompareVec " << name << " size_match FAIL " << std::endl ; 
+    if(!size_match) LOG(info) << name << " size_match FAIL " ; 
     if(!size_match) mismatch += 1 ; 
 
     int data_match = memcmp( a.data(), b.data(), a.size()*sizeof(T) ) ; 
-    if(data_match != 0) std::cout << "CSGFoundary::CompareVec " << name << " sizeof(T) " << sizeof(T) << " data_match FAIL " << std::endl ; 
+    if(data_match != 0) LOG(info) << name << " sizeof(T) " << sizeof(T) << " data_match FAIL " ; 
     if(data_match != 0) mismatch += 1 ; 
 
     int byte_match = CompareBytes( a.data(), b.data(), a.size()*sizeof(T) ) ;
-    if(byte_match != 0) std::cout << "CSGFoundary::CompareVec " << name << " sizeof(T) " << sizeof(T) << " byte_match FAIL " << std::endl ; 
+    if(byte_match != 0) LOG(info) << name << " sizeof(T) " << sizeof(T) << " byte_match FAIL " ; 
     if(byte_match != 0) mismatch += 1 ; 
 
     return mismatch ; 
@@ -138,25 +173,23 @@ template int CSGFoundry::CompareVec(const char*, const std::vector<unsigned>& a,
 void CSGFoundry::summary(const char* msg ) const 
 {
     unsigned num_solids = getNumSolid(); 
-    std::cout 
+    LOG(info) 
         << msg
         << " num_solid " << solid.size()
         << " num_solids " << num_solids
-        << std::endl 
         ;
 
-    std::cout << " solids " << std::endl ;  ; 
     for(unsigned i=0 ; i < num_solids ; i++)
     {
         const CSGSolid* so = getSolid(i); 
         std::string l4(so->label, 4);  
-        std::cout <<  "[" << l4 << "]" << so->center_extent << " " << so->desc() << std::endl  ;
+        LOG(info) <<  "[" << l4 << "]" << so->center_extent << " " << so->desc()  ;
     }
     for(unsigned i=0 ; i < num_solids ; i++)
     {
         const CSGSolid* so = getSolid(i); 
         std::string l4(so->label, 4);  
-        std::cout <<  "[" << l4 << "]" << so->numPrim << " " <<  so->primOffset << std::endl ; 
+        LOG(info) <<  "[" << l4 << "]" << so->numPrim << " " <<  so->primOffset ; 
     }
 }
 
@@ -164,63 +197,57 @@ void CSGFoundry::summary(const char* msg ) const
 
 void CSGFoundry::dump() const 
 {
-    std::cout << "[ CSGFoundry::dump " << std::endl ; 
+    LOG(info) << "[" ; 
     for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpPrim(idx); 
     for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpNode(idx); 
-    std::cout << "] CSGFoundry::dump " << std::endl ; 
+    LOG(info) << "]" ; 
 }
 
 void CSGFoundry::dumpSolid(unsigned solidIdx) const 
 {
-    //std::cout << "CSGFoundry::dumpSolid " << solidIdx << std::endl ; 
-
     const CSGSolid* so = solid.data() + solidIdx ; 
-    std::cout << so->desc() << std::endl ; 
+    LOG(info) << so->desc() ; 
 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
-        std::cout 
+        LOG(info) 
             << " primIdx " << std::setw(3) << primIdx << " "
             << pr->desc() 
-            << std::endl 
             ; 
 
         for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+pr->numNode() ; nodeIdx++)
         {
             const CSGNode* nd = node.data() + nodeIdx ; 
-            std::cout << nd->desc() << std::endl ; 
+            LOG(info) << nd->desc() ; 
         }
     } 
 }
 
 void CSGFoundry::dumpPrim(unsigned solidIdx) const 
 {
-    //std::cout << "CSGFoundry::dumpPrim " << solidIdx << std::endl ; 
     const CSGSolid* so = solid.data() + solidIdx ; 
-    std::cout << so->desc() ; 
-    if( so->numPrim > 1 ) std::cout << std::endl  ; 
+    LOG(info) << so->desc() ; 
+    if( so->numPrim > 1 ) LOG(info)  ; 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
-        std::cout 
+        LOG(info) 
             << " primIdx " << std::setw(3) << primIdx << " "
             << pr->desc() 
-            << std::endl 
             ; 
     } 
 }
 
 void CSGFoundry::dumpNode(unsigned solidIdx) const 
 {
-    //std::cout << "CSGFoundry::dumpNode " << solidIdx << std::endl ; 
     const CSGSolid* so = solid.data() + solidIdx ; 
 
     const CSGPrim* pr0 = prim.data() + so->primOffset ; 
     const CSGNode* nd0 = node.data() + pr0->nodeOffset() ;  
 
-    std::cout << so->desc() ;
-    if( so->numPrim > 1 || pr0->numNode() > 1) std::cout << std::endl ;
+    LOG(info) << so->desc() ;
+    if( so->numPrim > 1 || pr0->numNode() > 1) LOG(info) ;
 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
@@ -228,7 +255,7 @@ void CSGFoundry::dumpNode(unsigned solidIdx) const
         for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+pr->numNode() ; nodeIdx++)
         {
             const CSGNode* nd = node.data() + nodeIdx ; 
-            std::cout << nd->desc() << std::endl ; 
+            LOG(info) << nd->desc() ; 
         }
     } 
 }
@@ -252,7 +279,7 @@ that the strides are irregular.
 CSGPrimSpec CSGFoundry::getPrimSpec(unsigned solidIdx) const 
 {
     CSGPrimSpec ps = d_prim ? getPrimSpecDevice(solidIdx) : getPrimSpecHost(solidIdx) ; 
-    if(ps.device == false) std::cout << "CSGFoundry::getPrimSpec WARNING using host PrimSpec " << std::endl ; 
+    if(ps.device == false) LOG(info) << "WARNING using host PrimSpec, upload first " ; 
     return ps ; 
 }
 CSGPrimSpec CSGFoundry::getPrimSpecHost(unsigned solidIdx) const 
@@ -274,9 +301,9 @@ CSGPrimSpec CSGFoundry::getPrimSpecDevice(unsigned solidIdx) const
 void CSGFoundry::checkPrimSpec(unsigned solidIdx) const 
 {
     CSGPrimSpec ps = getPrimSpec(solidIdx);  
-    std::cout << "[ CSGFoundry::checkPrimSpec " << solidIdx << std::endl ; 
+    LOG(info) << "[ solidIdx  " << solidIdx ; 
     ps.downloadDump(); 
-    std::cout << "] CSGFoundry::checkPrimSpec " << solidIdx << std::endl ; 
+    LOG(info) << "] solidIdx " << solidIdx ; 
 }
 
 void CSGFoundry::checkPrimSpec() const 
@@ -333,7 +360,7 @@ unsigned CSGFoundry::getSolidIdx(const CSGSolid* so) const
     for(unsigned i=0 ; i < solid.size() ; i++) 
     {
        const CSGSolid* s = solid.data() + i ; 
-       std::cout << " i " << i << " s " << s << " so " << so << std::endl ; 
+       LOG(info) << " i " << i << " s " << s << " so " << so ; 
        if(s == so) idx = i ;  
     } 
     assert( idx != ~0u ); 
@@ -362,7 +389,7 @@ CSGSolid* CSGFoundry::make(const char* name)
     else if(strcmp(name, "ibsp") == 0) so = makeIntersectionBoxSphere(name) ;
     else if(strcmp(name, "dbsp") == 0) so = makeDifferenceBoxSphere(name) ;
     else if(strcmp(name, "rcyl") == 0) so = makeRotatedCylinder(name) ;
-    else std::cout << "CSGFoundry::make FATAL invalid name [" << name << "]" << std::endl ; 
+    else LOG(fatal) << "invalid name [" << name << "]" ; 
     assert( so ); 
     return so ;  
 }
@@ -389,12 +416,10 @@ CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
     bool in_range = idx < IMAX  ;
     if(!in_range)
     {
-        std::cout 
-            << "CSGFoundry::addNode"
+        LOG(fatal) 
             << " FATAL : OUT OF RANGE "
             << " idx " << idx 
             << " IMAX " << IMAX
-            << std::endl  
             ;
     }
 
@@ -421,11 +446,9 @@ unsigned CSGFoundry::addTran( const Tran<T>& tr  )
     bool dump = false ; 
     if(dump)
     {
-        std::cout 
-            << "CSGFoundry::addTran"
+        LOG(info) 
             << " idx " << idx 
             << " tr " << tr.brief()
-            << std::endl
             ; 
     }
 
@@ -575,16 +598,14 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
     for(int j=j0 ; j < j1 ; j+=js ) 
     for(int k=k0 ; k < k1 ; k+=ks ) 
     {
-        //std::cout << std::setw(2) << numPrim << " (i,j,k) " << "(" << i << "," << j << "," << k << ") " << std::endl ; 
+        //LOG(info) << std::setw(2) << numPrim << " (i,j,k) " << "(" << i << "," << j << "," << k << ") " ; 
         numPrim += 1 ; 
     }
        
-    std::cout 
-        << "CSGFoundry::makeClustered " 
+    LOG(info) 
         << " name " << name  
         << " numPrim " << numPrim 
         << " inbox " << inbox
-        << std::endl
         ;  
 
     CSGSolid* so = addSolid(numPrim, name);
@@ -614,7 +635,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
 
         //DumpAABB("p->AABB() aft setup", p->AABB() ); 
         
-        std::cout << " idx " << idx << " transform_idx " << transform_idx << std::endl ; 
+        LOG(info) << " idx " << idx << " transform_idx " << transform_idx ; 
  
         idx += 1 ; 
     }
@@ -643,21 +664,21 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
 
 
     so->center_extent = bb.center_extent() ;   // contains AABB of all CSGPrim 
-    std::cout << " so->center_extent " << so->center_extent << std::endl ; 
+    LOG(info) << " so->center_extent " << so->center_extent ; 
     return so ; 
 }
 
 void CSGFoundry::DumpAABB(const char* msg, const float* aabb) // static 
 {
     int w = 4 ; 
-    std::cout << msg << " " ; 
-    std::cout << " | " ; 
-    for(int l=0 ; l < 3 ; l++) std::cout << std::setw(w) << *(aabb+l) << " " ; 
-    std::cout << " | " ; 
-    for(int l=0 ; l < 3 ; l++) std::cout << std::setw(w) << *(aabb+l+3) << " " ; 
-    std::cout << " | " ; 
-    for(int l=0 ; l < 3 ; l++) std::cout << std::setw(w) << *(aabb+l+3) - *(aabb+l)  << " " ; 
-    std::cout << std::endl ; 
+    LOG(info) << msg << " " ; 
+    LOG(info) << " | " ; 
+    for(int l=0 ; l < 3 ; l++) LOG(info) << std::setw(w) << *(aabb+l) << " " ; 
+    LOG(info) << " | " ; 
+    for(int l=0 ; l < 3 ; l++) LOG(info) << std::setw(w) << *(aabb+l+3) << " " ; 
+    LOG(info) << " | " ; 
+    for(int l=0 ; l < 3 ; l++) LOG(info) << std::setw(w) << *(aabb+l+3) - *(aabb+l)  << " " ; 
+    LOG(info) ; 
 }
 
 
@@ -679,12 +700,12 @@ CSGSolid* CSGFoundry::makeSolid11(const char* label, CSGNode nd, const std::vect
 
     float extent = p->extent(); 
     if(extent == 0.f )
-        std::cout << "CSGFoundry::makeSolid11 : FATAL : " << label << " : got zero extent " << std::endl ; 
+        LOG(fatal) << "FATAL : " << label << " : got zero extent " ; 
     assert( extent > 0.f ); 
 
     AABB bb = AABB::Make( p->AABB() ); 
     so->center_extent = bb.center_extent()  ; 
-    std::cout << "CSGFoundry::makeSolid11 so.label " << so->label << " so.center_extent " << so->center_extent << std::endl ; 
+    LOG(info) << "so.label " << so->label << " so.center_extent " << so->center_extent ; 
     return so ; 
 }
 
@@ -710,7 +731,7 @@ CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float r
     p->setAABB( bb.data() );  
 
     so->center_extent = bb.center_extent()  ; 
-    std::cout << "CSGFoundry::makeUnionBoxSphere so.label " << so->label << " so.center_extent " << so->center_extent << std::endl ; 
+    LOG(info) << "so.label " << so->label << " so.center_extent " << so->center_extent ; 
     return so ; 
 }
 
@@ -745,7 +766,7 @@ CSGSolid* CSGFoundry::makeEllipsoid(  const char* label, float rx, float ry, flo
     const Tran<double>* tr = Tran<double>::make_scale(sx, sy, sz ); 
 
     unsigned idx = 1 + addTran(*tr);      // 1-based idx, 0 meaning None
-    //std::cout << "CSGFoundry::makeEllipsoid " << *tr << std::endl ;
+    //LOG(info) << "CSGFoundry::makeEllipsoid " << *tr ;
 
     nd.setTransform(idx); 
     return makeSolid11(label, nd ); 
@@ -757,7 +778,7 @@ CSGSolid* CSGFoundry::makeRotatedCylinder(const char* label, float px, float py,
     CSGNode nd = CSGNode::Cylinder( px, py, radius, z1, z2 ); 
     const Tran<float>* tr = Tran<float>::make_rotate(ax, ay, az, angle_deg ); 
     unsigned idx = 1 + addTran(*tr);      // 1-based idx, 0 meaning None
-    //std::cout << "CSGFoundry::makeRotatedCylinder " << *tr << std::endl ;
+    //LOG(info) << *tr ;
     nd.setTransform(idx); 
     return makeSolid11(label, nd ); 
 }
@@ -827,7 +848,7 @@ float4 CSGFoundry::TriPlane( const std::vector<float3>& v, unsigned i, unsigned 
     float di = dot( n, v[i] ) ;
     float dj = dot( n, v[j] ) ;
     float dk = dot( n, v[k] ) ;
-    //std::cout << " di " << di << " dj " << dj << " dk " << dk << " n (" << n.x << "," << n.y << "," << n.z << ")" << std::endl ; 
+    //LOG(info) << " di " << di << " dj " << dj << " dk " << dk << " n (" << n.x << "," << n.y << "," << n.z << ")" ; 
     float4 plane = make_float4( n, di ) ; 
     return plane ;  
 }
@@ -902,7 +923,7 @@ CSGSolid* CSGFoundry::makeConvexPolyhedronTetrahedron(const char* label, float e
     pl.push_back(TriPlane(vtx, 3, 0, 2)) ;  
     pl.push_back(TriPlane(vtx, 0, 3, 1)) ;  
 
-    //for(unsigned i=0 ; i < pl.size() ; i++) std::cout << " pl (" << pl[i].x << "," << pl[i].y << "," << pl[i].z << "," << pl[i].w << ") " << std::endl ;
+    //for(unsigned i=0 ; i < pl.size() ; i++) LOG(info) << " pl (" << pl[i].x << "," << pl[i].y << "," << pl[i].z << "," << pl[i].w << ") " ;
  
     CSGNode nd = {} ;
     nd.setAABB(extent); 
@@ -918,7 +939,7 @@ void CSGFoundry::write(const char* base, const char* rel) const
 }
 void CSGFoundry::write(const char* dir) const 
 {
-    std::cout << "CSGFoundry::write " << dir << std::endl ; 
+    LOG(info) << dir ; 
               
     if(solid.size() > 0 ) NP::Write(dir, "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
     if(prim.size() > 0 ) NP::Write(dir, "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
@@ -956,7 +977,7 @@ void CSGFoundry::load( const char* base, const char* rel )
 
 void CSGFoundry::load( const char* dir )
 {
-    std::cout << "[ CSGFoundry::load " << dir << std::endl ; 
+    LOG(info) << "[ " << dir ; 
 
     loadArray( solid , dir, "solid.npy" ); 
     loadArray( prim  , dir, "prim.npy" ); 
@@ -964,10 +985,9 @@ void CSGFoundry::load( const char* dir )
     loadArray( tran  , dir, "tran.npy" ); 
     loadArray( itra  , dir, "itra.npy" ); 
     loadArray( inst  , dir, "inst.npy" ); 
-
     loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
 
-    std::cout << "] CSGFoundry::load " << dir << std::endl ; 
+    LOG(info) << "]" ; 
 }
 
 
@@ -978,7 +998,7 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
     bool quiet = false ; 
     if(a == nullptr)
     { 
-        if(!quiet) std::cout << "CSGFoundry::loadArray FAIL for " << dir <<  "/" << name << std::endl ; 
+        if(!quiet) LOG(info) << "FAIL for " << dir <<  "/" << name ; 
     }
     else
     { 
@@ -987,13 +1007,12 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
         unsigned nj = a->shape[1] ; 
         unsigned nk = a->shape[2] ; 
 
-        if(!quiet) std::cout 
-                << "CSGFoundry::loadArray"
+        if(!quiet) LOG(info) 
                 << " ni " << std::setw(5) << ni 
                 << " nj " << std::setw(1) << nj 
                 << " nk " << std::setw(1) << nk 
                 << " " << dir <<  "/" << name 
-                << std::endl ; 
+                ; 
 
         vec.clear(); 
         vec.resize(ni); 
@@ -1011,7 +1030,7 @@ template void CSGFoundry::loadArray( std::vector<qat4>& , const char* , const ch
 void CSGFoundry::upload()
 {
     inst_find_unique(); 
-    std::cout << "[ CSGFoundry::upload " << desc() << std::endl ; 
+    LOG(info) << "[ " << desc() ; 
     assert( tran.size() == itra.size() ); 
 
     d_solid = solid.size() > 0 ? CU::UploadArray<CSGSolid>(solid.data(), solid.size() ) : nullptr ; 
@@ -1021,7 +1040,7 @@ void CSGFoundry::upload()
     d_tran = tran.size() > 0 ? CU::UploadArray<qat4>(tran.data(), tran.size() ) : nullptr ; 
     d_itra = itra.size() > 0 ? CU::UploadArray<qat4>(itra.data(), itra.size() ) : nullptr ; 
 
-    std::cout << "] CSGFoundry::upload "  << std::endl ; 
+    LOG(info) << "]"  ; 
     // note that d_solid and d_tran are not actually used on GPU currently 
 }
 
@@ -1043,15 +1062,44 @@ unsigned CSGFoundry::getNumUniqueINS() const
     return ins.size(); 
 }
 
+
+
 unsigned CSGFoundry::getNumInstancesIAS(unsigned ias_idx) const
 {
     return qat4::count_ias(inst, ias_idx );  
 }
-
-void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& ias_inst, unsigned ias_idx ) const 
+unsigned CSGFoundry::getNumInstancesGAS(unsigned gas_idx) const
 {
-    qat4::select_instances_ias(inst, ias_inst, ias_idx ) ;
+    return qat4::count_gas(inst, gas_idx );  
+}
+
+void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx ) const 
+{
+    qat4::select_instances_ias(inst, select_inst, ias_idx ) ;
+}
+void CSGFoundry::getInstanceTransformsGAS(std::vector<qat4>& select_inst, unsigned gas_idx ) const 
+{
+    qat4::select_instances_gas(inst, select_inst, gas_idx ) ;
+}
+
+const qat4* CSGFoundry::getInstanceGAS(unsigned gas_idx_ , unsigned ordinal)
+{
+    int index = qat4::find_instance_gas(inst, gas_idx_, ordinal);
+    return index > -1 ? &inst[index] : nullptr ; 
 }
 
 
+std::string CSGFoundry::descGAS() const 
+{
+    std::stringstream ss ; 
+    ss << desc() << std::endl ; 
+    for(unsigned i=0 ; i < gas.size() ; i++)
+    {   
+        unsigned gas_idx = gas[i]; 
+        unsigned num_inst_gas = getNumInstancesGAS(gas_idx); 
+        ss << std::setw(5) << gas_idx << ":" << std::setw(8) << num_inst_gas << std::endl ;  
+    }   
+    std::string s = ss.str(); 
+    return s ; 
+}
 

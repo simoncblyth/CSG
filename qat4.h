@@ -168,6 +168,7 @@ struct qat4
         q3.f.w = 1.f ; 
     }
 
+    // collects unique ins/gas/ias indices found in qv vector of instances
     static QAT4_METHOD void find_unique(const std::vector<qat4>& qv, std::vector<unsigned>& ins, std::vector<unsigned>& gas, std::vector<unsigned>& ias) 
     {
          for(unsigned i=0 ; i < qv.size() ; i++)
@@ -181,6 +182,7 @@ struct qat4
          }
     } 
 
+    // count the number of instances with the provided ias_idx 
     static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned ias_idx_ )
     {
         unsigned count = 0 ; 
@@ -193,8 +195,7 @@ struct qat4
         }
         return count ; 
     }
-
-
+    // select instances with the provided ias_idx, ordered as they are found
     static QAT4_METHOD void select_instances_ias(const std::vector<qat4>& qv, std::vector<qat4>& select_qv, unsigned ias_idx_ )
     {
         for(unsigned i=0 ; i < qv.size() ; i++)
@@ -207,6 +208,51 @@ struct qat4
     }
 
 
+    // count the number of instances with the provided gas_idx 
+    static QAT4_METHOD unsigned count_gas( const std::vector<qat4>& qv , unsigned gas_idx_ )
+    {
+        unsigned count = 0 ; 
+        for(unsigned i=0 ; i < qv.size() ; i++)
+        {
+            const qat4& q = qv[i] ; 
+            unsigned ins_idx,  gas_idx, ias_idx ; 
+            q.getIdentity(ins_idx,  gas_idx, ias_idx);  
+            if( gas_idx_ == gas_idx ) count += 1 ;
+        }
+        return count ; 
+    }
+    // select instances with the provided gas_idx, ordered as they are found
+    static QAT4_METHOD void select_instances_gas(const std::vector<qat4>& qv, std::vector<qat4>& select_qv, unsigned gas_idx_ )
+    {
+        for(unsigned i=0 ; i < qv.size() ; i++)
+        {
+            const qat4& q = qv[i] ; 
+            unsigned ins_idx,  gas_idx, ias_idx ; 
+            q.getIdentity(ins_idx,  gas_idx, ias_idx );  
+            if( gas_idx_ == gas_idx ) select_qv.push_back(q) ;
+        }
+    }
+
+    // return index of the ordinal-th instance with the provided gas_idx or -1 if not found
+    static QAT4_METHOD int find_instance_gas(const std::vector<qat4>& qv, unsigned gas_idx_, unsigned ordinal  )
+    {
+        unsigned count = 0 ;
+        int index = -1 ;  
+        for(unsigned i=0 ; i < qv.size() ; i++)
+        {
+            const qat4& q = qv[i] ; 
+            unsigned ins_idx,  gas_idx, ias_idx ; 
+            q.getIdentity(ins_idx,  gas_idx, ias_idx );  
+            if( gas_idx_ == gas_idx )
+            {
+                if( count == ordinal ) index = i  ; 
+                count += 1 ; 
+            }
+        }
+        return index ;  
+    }
+
+    static QAT4_METHOD void dump(const std::vector<qat4>& qv);
 
 #endif
 
@@ -217,7 +263,7 @@ struct qat4
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
 
-inline std::ostream& operator<<(std::ostream& os, const qat4& v)
+inline std::ostream& operator<<(std::ostream& os, const qat4& v) 
 {
     os 
        << v.q0.f  
@@ -228,4 +274,36 @@ inline std::ostream& operator<<(std::ostream& os, const qat4& v)
     return os; 
 }
 #endif 
+
+
+
+
+#if defined(__CUDACC__) || defined(__CUDABE__)
+#else
+
+QAT4_FUNCTION void qat4::dump(const std::vector<qat4>& qv)
+{
+    for(unsigned i=0 ; i < qv.size() ; i++)
+    {
+        const qat4& q = qv[i] ; 
+        unsigned ins_idx,  gas_idx, ias_idx ; 
+        q.getIdentity(ins_idx,  gas_idx, ias_idx );  
+
+        std::cout 
+            << " i " << std::setw(4) << i  
+            << " ins " << std::setw(7) << ins_idx  
+            << " gas " << std::setw(3) << gas_idx  
+            << " ias " << std::setw(2) << ias_idx  
+            << " " << q << std::endl 
+            ;
+
+    }
+}
+
+
+#endif 
+
+
+
+
 

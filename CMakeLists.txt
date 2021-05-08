@@ -103,7 +103,7 @@ message(STATUS "CMAKE_BINARY_DIR         : ${CMAKE_BINARY_DIR}")
 
 
 add_library( ${name}  SHARED ${SOURCES} ${HEADERS} )
-target_link_libraries(${name} PUBLIC ${CUDA_LIBRARIES})
+target_link_libraries(${name} PUBLIC ${CUDA_LIBRARIES} Opticks::SysRap)
 
 target_include_directories(${name}
      PUBLIC
