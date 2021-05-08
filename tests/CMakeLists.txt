@@ -8,6 +8,7 @@ set(TEST_SOURCES
     CSGPrimTest.cc
     CSGSolidTest.cc
     CSGFoundryTest.cc
+    CSGFoundryLoadTest.cc
     CSGScanTest.cc
     TranTest.cc
     CUTest.cc

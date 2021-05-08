@@ -37,6 +37,14 @@ struct CSGFoundry
     void init(); 
 
     void makeDemoSolids() ;
+    enum {  // enum used for Demo solids (equivalent to lvIdx or meshIdx with full geometries)
+        SPHE_MIDX, ZSPH_MIDX, CONE_MIDX, HYPE_MIDX, BOX3_MIDX, 
+        PLAN_MIDX, SLAB_MIDX, CYLI_MIDX, DISC_MIDX, VCUB_MIDX, 
+        VTET_MIDX, ELLI_MIDX, UBSP_MIDX, IBSP_MIDX, DBSP_MIDX, 
+        RCYL_MIDX 
+    }; 
+
+
     void makeDemoGrid();
 
     std::string desc() const ;
@@ -47,10 +55,21 @@ struct CSGFoundry
 
     void dump() const ;
     void dumpSolid(unsigned solidIdx ) const ;
+
+
+
+    void dumpPrim() const ;
     void dumpPrim(unsigned solidIdx ) const ;
+    std::string descPrim() const ;
     std::string descPrim(unsigned solidIdx) const  ;
 
+    void dumpNode() const ;
     void dumpNode(unsigned solidIdx ) const ;
+    std::string descNode() const ;
+    std::string descNode(unsigned solidIdx) const  ;
+
+
+
 
     CSGPrimSpec getPrimSpec(       unsigned solidIdx) const ;
     CSGPrimSpec getPrimSpecHost(   unsigned solidIdx) const ;
@@ -82,6 +101,8 @@ struct CSGFoundry
     const CSGPrim*    getSolidPrim(unsigned solidIdx, unsigned primIdxRel) const ;
     const CSGNode*    getSolidPrimNode(unsigned solidIdx, unsigned primIdxRel, unsigned nodeIdxRel) const ;
 
+    void getMeshPrim(std::vector<CSGPrim>& select_prim, unsigned mesh_idx ) const ;
+
 
     CSGSolid* addSolid(unsigned num_prim, const char* label );
     CSGPrim*  addPrim(int num_node, int meshIdx=-1) ;
@@ -95,9 +116,8 @@ struct CSGFoundry
     CSGSolid* makeLayered( const char* label, float outer_radius, unsigned layers ) ;
     CSGSolid* makeClustered(const char* name,  int i0, int i1, int is, int j0, int j1, int js, int k0, int k1, int ks, double unit, bool inbox ) ;
 
-    CSGSolid* makeSolid11(const char* label, CSGNode nd, const std::vector<float4>* pl=nullptr  );
-
-    CSGSolid* makeBooleanBoxSphere( const char* label, char op, float radius, float fullside ) ;
+    CSGSolid* makeSolid11(const char* label, CSGNode nd, const std::vector<float4>* pl=nullptr, int meshIdx=-1 );
+    CSGSolid* makeBooleanBoxSphere( const char* label, char op, float radius, float fullside, int meshIdx = -1  ) ;
 
     CSGSolid* makeUnionBoxSphere(        const char* label="ubsp", float radius=100.f, float fullside=150.f );
     CSGSolid* makeIntersectionBoxSphere( const char* label="ibsp", float radius=100.f, float fullside=150.f );

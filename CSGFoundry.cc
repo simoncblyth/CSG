@@ -6,15 +6,17 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "SPath.hh"
+#include "NP.hh"
+#include "PLOG.hh"
+
 #include "sutil_vec_math.h"
 #include "OpticksCSG.h"
 #include "CSGSolid.h"
 #include "CU.h"
-#include "NP.hh"
 #include "CSGFoundry.h"
 #include "AABB.h"
 
-#include "PLOG.hh"
 
 
 const unsigned CSGFoundry::IMAX = 50000 ; 
@@ -198,8 +200,9 @@ void CSGFoundry::summary(const char* msg ) const
 void CSGFoundry::dump() const 
 {
     LOG(info) << "[" ; 
-    for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpPrim(idx); 
-    for(unsigned idx=0 ; idx < solid.size() ; idx++) dumpNode(idx); 
+    dumpPrim(); 
+    dumpNode(); 
+
     LOG(info) << "]" ; 
 }
 
@@ -226,6 +229,22 @@ void CSGFoundry::dumpSolid(unsigned solidIdx) const
 
 
 
+
+
+void CSGFoundry::dumpPrim() const 
+{
+    std::string s = descPrim(); 
+    LOG(info) << std::endl << s ;
+}
+
+std::string CSGFoundry::descPrim() const 
+{
+    std::stringstream ss ; 
+    for(unsigned idx=0 ; idx < solid.size() ; idx++) ss << descPrim(idx); 
+    std::string s = ss.str(); 
+    return s ; 
+}
+
 std::string CSGFoundry::descPrim(unsigned solidIdx) const 
 {
     const CSGSolid* so = getSolid(solidIdx); 
@@ -245,12 +264,12 @@ std::string CSGFoundry::descPrim(unsigned solidIdx) const
     return s ; 
 }
 
+
 void CSGFoundry::dumpPrim(unsigned solidIdx) const 
 {
     std::string s = descPrim(solidIdx); 
-    LOG(info) << s ;
+    LOG(info) << std::endl << s ;
 }
-
 
 const CSGPrim*  CSGFoundry::getSolidPrim(unsigned solidIdx, unsigned primIdxRel) const 
 {
@@ -270,26 +289,54 @@ const CSGPrim*  CSGFoundry::getSolidPrim(unsigned solidIdx, unsigned primIdxRel)
 
 
 
-void CSGFoundry::dumpNode(unsigned solidIdx) const 
+
+void CSGFoundry::dumpNode() const
+{
+    LOG(info) << std::endl << descNode(); 
+} 
+
+void CSGFoundry::dumpNode(unsigned solidIdx) const
+{
+    LOG(info) << std::endl << descNode(solidIdx); 
+} 
+
+std::string CSGFoundry::descNode() const 
+{
+    std::stringstream ss ;
+    for(unsigned idx=0 ; idx < solid.size() ; idx++) ss << descNode(idx) << std::endl ; 
+    std::string s = ss.str(); 
+    return s ; 
+}
+
+std::string CSGFoundry::descNode(unsigned solidIdx) const 
 {
     const CSGSolid* so = solid.data() + solidIdx ; 
 
     const CSGPrim* pr0 = prim.data() + so->primOffset ; 
     const CSGNode* nd0 = node.data() + pr0->nodeOffset() ;  
 
-    LOG(info) << so->desc() ;
-    if( so->numPrim > 1 || pr0->numNode() > 1) LOG(info) ;
+    std::stringstream ss ;
+    ss << so->desc() ;
+    if( so->numPrim > 1 || pr0->numNode() > 1) ss << std::endl ; 
 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
-        for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+pr->numNode() ; nodeIdx++)
+
+        int numNode = pr->numNode() ; 
+        for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+numNode ; nodeIdx++)
         {
             const CSGNode* nd = node.data() + nodeIdx ; 
-            LOG(info) << nd->desc() ; 
+            ss << nd->desc() ; 
+            if( numNode > 1 ) ss << std::endl ; 
         }
     } 
+
+    std::string s = ss.str(); 
+    return s ; 
 }
+
+
 
 const CSGNode* CSGFoundry::getSolidPrimNode(unsigned solidIdx, unsigned primIdxRel, unsigned nodeIdxRel) const 
 {
@@ -434,6 +481,7 @@ CSGSolid* CSGFoundry::make(const char* name)
     return so ;  
 }
 
+
 /**
 CSGFoundry::addNode
 --------------------
@@ -543,6 +591,16 @@ CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx)
     prim.push_back(pr); 
     return prim.data() + primIdx ; 
 }
+
+
+// collect Prims with the supplied mesh_idx 
+void CSGFoundry::getMeshPrim(std::vector<CSGPrim>& select_prim, unsigned mesh_idx ) const 
+{
+    CSGPrim::select_prim_mesh(prim, select_prim, mesh_idx); 
+}
+
+
+
 
 
 /**
@@ -725,17 +783,17 @@ void CSGFoundry::DumpAABB(const char* msg, const float* aabb) // static
 
 
 /**
-CSGFoundry::makeSolid11 makes 1-CSGPrim with 1-Node
-------------------------------------------------
+CSGFoundry::makeSolid11 makes 1-CSGPrim with 1-CSGNode
+---------------------------------------------------------
 **/
 
-CSGSolid* CSGFoundry::makeSolid11(const char* label, CSGNode nd, const std::vector<float4>* pl  ) 
+CSGSolid* CSGFoundry::makeSolid11(const char* label, CSGNode nd, const std::vector<float4>* pl, int meshIdx  ) 
 {
     unsigned numPrim = 1 ; 
     CSGSolid* so = addSolid(numPrim, label);
 
     unsigned numNode = 1 ; 
-    CSGPrim* p = addPrim(numNode); 
+    CSGPrim* p = addPrim(numNode, meshIdx); 
     CSGNode* n = addNode(nd, pl ); 
     p->setAABB( n->AABB() ); 
 
@@ -750,7 +808,7 @@ CSGSolid* CSGFoundry::makeSolid11(const char* label, CSGNode nd, const std::vect
     return so ; 
 }
 
-CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float radius, float fullside )
+CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float radius, float fullside, int meshIdx )
 {
     CSGNode op = CSGNode::BooleanOperator(op_); 
     CSGNode bx = CSGNode::Box3(fullside) ; 
@@ -760,7 +818,7 @@ CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float r
     CSGSolid* so = addSolid(numPrim, label);
 
     unsigned numNode = 3 ; 
-    CSGPrim* p = addPrim(numNode); 
+    CSGPrim* p = addPrim(numNode, meshIdx); 
 
     addNode(op); 
     addNode(bx); 
@@ -776,21 +834,25 @@ CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float r
     return so ; 
 }
 
+
+
+
+
 CSGSolid* CSGFoundry::makeUnionBoxSphere( const char* label, float radius, float fullside ){
-    return makeBooleanBoxSphere(label, 'U', radius, fullside ); 
+    return makeBooleanBoxSphere(label, 'U', radius, fullside, UBSP_MIDX ); 
 }
 CSGSolid* CSGFoundry::makeIntersectionBoxSphere( const char* label, float radius, float fullside ){
-    return makeBooleanBoxSphere(label, 'I', radius, fullside ); 
+    return makeBooleanBoxSphere(label, 'I', radius, fullside, IBSP_MIDX ); 
 }
 CSGSolid* CSGFoundry::makeDifferenceBoxSphere( const char* label, float radius, float fullside ){
-    return makeBooleanBoxSphere(label, 'D', radius, fullside ); 
+    return makeBooleanBoxSphere(label, 'D', radius, fullside, DBSP_MIDX ); 
 }
 
 
 CSGSolid* CSGFoundry::makeSphere(const char* label, float radius)
 {
     CSGNode nd = CSGNode::Sphere(radius); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, SPHE_MIDX ); 
 }
 CSGSolid* CSGFoundry::makeEllipsoid(  const char* label, float rx, float ry, float rz )
 {
@@ -810,8 +872,9 @@ CSGSolid* CSGFoundry::makeEllipsoid(  const char* label, float rx, float ry, flo
     //LOG(info) << "CSGFoundry::makeEllipsoid " << *tr ;
 
     nd.setTransform(idx); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, ELLI_MIDX ); 
 }
+
 
 
 CSGSolid* CSGFoundry::makeRotatedCylinder(const char* label, float px, float py, float radius, float z1, float z2, float ax, float ay, float az, float angle_deg )
@@ -821,7 +884,7 @@ CSGSolid* CSGFoundry::makeRotatedCylinder(const char* label, float px, float py,
     unsigned idx = 1 + addTran(*tr);      // 1-based idx, 0 meaning None
     //LOG(info) << *tr ;
     nd.setTransform(idx); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, RCYL_MIDX ); 
 }
 
 
@@ -833,50 +896,67 @@ CSGSolid* CSGFoundry::makeRotatedCylinder(const char* label, float px, float py,
 CSGSolid* CSGFoundry::makeZSphere(const char* label, float radius, float z1, float z2)
 {
     CSGNode nd = CSGNode::ZSphere(radius, z1, z2); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, ZSPH_MIDX ); 
 }
+
+
+
 
 CSGSolid* CSGFoundry::makeCone(const char* label, float r1, float z1, float r2, float z2)
 {
     CSGNode nd = CSGNode::Cone(r1, z1, r2, z2 ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, CONE_MIDX ); 
 }
+
+
+
 
 CSGSolid* CSGFoundry::makeHyperboloid(const char* label, float r0, float zf, float z1, float z2)
 {
     CSGNode nd = CSGNode::Hyperboloid( r0, zf, z1, z2 ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, HYPE_MIDX ); 
 }
+
+
+
 
 CSGSolid* CSGFoundry::makeBox3(const char* label, float fx, float fy, float fz )
 {
     CSGNode nd = CSGNode::Box3(fx, fy, fz); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, BOX3_MIDX ); 
 }
+
+
 
 CSGSolid* CSGFoundry::makePlane(const char* label, float nx, float ny, float nz, float d)
 {
     CSGNode nd = CSGNode::Plane(nx, ny, nz, d ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, PLAN_MIDX ); 
 }
+
+
+
 
 CSGSolid* CSGFoundry::makeSlab(const char* label, float nx, float ny, float nz, float d1, float d2 )
 {
     CSGNode nd = CSGNode::Slab( nx, ny, nz, d1, d1 ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, SLAB_MIDX ); 
 }
+
+
+
 
 CSGSolid* CSGFoundry::makeCylinder(const char* label, float px, float py, float radius, float z1, float z2)
 {
     CSGNode nd = CSGNode::Cylinder( px, py, radius, z1, z2 ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, CYLI_MIDX ); 
 }
 
 
 CSGSolid* CSGFoundry::makeDisc(const char* label, float px, float py, float ir, float r, float z1, float z2)
 {
     CSGNode nd = CSGNode::Disc(px, py, ir, r, z1, z2 ); 
-    return makeSolid11(label, nd ); 
+    return makeSolid11(label, nd, nullptr, DISC_MIDX ); 
 }
 
 
@@ -910,7 +990,7 @@ CSGSolid* CSGFoundry::makeConvexPolyhedronCube(const char* label, float extent)
 
     CSGNode nd = {} ;
     nd.setAABB(-hx, -hy, -hz, hx, hy, hz); 
-    return makeSolid11(label, nd, &pl ); 
+    return makeSolid11(label, nd, &pl, VCUB_MIDX ); 
 }
 
 
@@ -968,7 +1048,7 @@ CSGSolid* CSGFoundry::makeConvexPolyhedronTetrahedron(const char* label, float e
  
     CSGNode nd = {} ;
     nd.setAABB(extent); 
-    return makeSolid11(label, nd, &pl ); 
+    return makeSolid11(label, nd, &pl, VTET_MIDX ); 
 }
 
 void CSGFoundry::write(const char* base, const char* rel) const 
@@ -1016,8 +1096,9 @@ void CSGFoundry::load( const char* base, const char* rel )
     load( dir.c_str() ); 
 }
 
-void CSGFoundry::load( const char* dir )
+void CSGFoundry::load( const char* dir_ )
 {
+    const char* dir = SPath::Resolve(dir_); 
     LOG(info) << "[ " << dir ; 
 
     loadArray( solid , dir, "solid.npy" ); 

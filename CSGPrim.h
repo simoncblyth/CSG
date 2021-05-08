@@ -79,12 +79,20 @@ struct CSGPrim
 
     PRIM_METHOD const unsigned* sbtIndexOffsetPtr() const { return &q1.u.x ; }
 
-    PRIM_METHOD void setAABB(  float e  ){                                                   q2.f.x = -e   ; q2.f.y = -e   ; q2.f.z = -e   ; q2.f.w =  e   ; q3.f.x =  e   ; q3.f.y =  e ; }  
-    PRIM_METHOD void setAABB(  float x0, float y0, float z0, float x1, float y1, float z1){  q2.f.x = x0   ; q2.f.y = y0   ; q2.f.z = z0   ; q2.f.w = x1   ; q3.f.x = y1   ; q3.f.y = z1 ; }  
+    PRIM_METHOD void setAABB(  float e  ){                                                   q2.f.x = -e     ; q2.f.y = -e   ; q2.f.z = -e   ; q2.f.w =  e   ; q3.f.x =  e   ; q3.f.y =  e ; }  
+    PRIM_METHOD void setAABB(  float x0, float  y0, float z0, float x1, float y1, float z1){      q2.f.x = x0    ; q2.f.y = y0   ; q2.f.z = z0   ; q2.f.w = x1   ; q3.f.x = y1   ; q3.f.y = z1 ; }  
+    PRIM_METHOD void getAABB( float& x0, float& y0, float& z0, float& x1, float& y1, float& z1) const { x0 = q2.f.x ; y0 = q2.f.y   ; z0 = q2.f.z   ; x1 = q2.f.w   ; y1 = q3.f.x   ; z1 = q3.f.y ; }
     PRIM_METHOD void setAABB( const float* a){                                               q2.f.x = a[0] ; q2.f.y = a[1] ; q2.f.z = a[2] ; q2.f.w = a[3] ; q3.f.x = a[4] ; q3.f.y = a[5] ; } 
     PRIM_METHOD const float* AABB() const {  return &q2.f.x ; }
     PRIM_METHOD const float3 mn() const {    return make_float3(q2.f.x, q2.f.y, q2.f.z) ; }
     PRIM_METHOD const float3 mx() const {    return make_float3(q2.f.w, q3.f.x, q3.f.y) ; }
+
+    PRIM_METHOD const float4 ce() const 
+    {    
+        float x0, y0, z0, x1, y1, z1 ; 
+        getAABB(x0, y0, z0, x1, y1, z1);  
+        return make_float4( (x0 + x1)/2.f,  (y0 + y1)/2.f,  (z0 + z1)/2.f,  extent() );  
+    }
     PRIM_METHOD float extent() const 
     {
         float3 d = make_float3( q2.f.w - q2.f.x, q3.f.x - q2.f.y, q3.f.y - q2.f.z ); 
@@ -97,6 +105,16 @@ struct CSGPrim
 
     static int value_offsetof_sbtIndexOffset(){ return offsetof(CSGPrim, q1.u.x)/4 ; }
     static int value_offsetof_AABB(){           return offsetof(CSGPrim, q2.f.x)/4 ; }
+
+    static PRIM_METHOD void select_prim_mesh(const std::vector<CSGPrim>& prims, std::vector<CSGPrim>& select_prims, unsigned mesh_idx_ )
+    {
+        for(unsigned i=0 ; i < prims.size() ; i++)
+        {
+            const CSGPrim& pr = prims[i] ; 
+            unsigned mesh_idx = pr.meshIdx();  
+            if( mesh_idx_ == mesh_idx ) select_prims.push_back(pr) ;
+        }
+    }
 
 
     std::string desc() const ; 
