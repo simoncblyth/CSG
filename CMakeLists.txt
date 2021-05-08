@@ -26,12 +26,13 @@ include(BCMDeploy)
 set(CMAKE_CXX_STANDARD 11) 
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-
 find_package(CUDA REQUIRED) 
+find_package(SysRap REQUIRED)
 
 include_directories(
     ${CUDA_INCLUDE_DIRS}
     ${OPTICKS_PREFIX}/externals/glm/glm
+    ${OPTICKS_PREFIX}/include/SysRap
     ${CMAKE_CURRENT_SOURCE_DIR} 
 )
 
@@ -56,8 +57,6 @@ list(APPEND SOURCES
 list(APPEND CSG_HEADERS
     sutil_vec_math.h
     Quad.h 
-    OpticksCSG.h
-
     CSGNode.h 
 
     CU.h
