@@ -1,7 +1,11 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include "plog/Severity.h"
+
+struct CSGName ; 
 
 #include "CSGSolid.h"
 #include "CSGPrim.h"
@@ -22,6 +26,7 @@ CSGFoundry
 
 struct CSGFoundry
 {
+    static const plog::Severity LEVEL ; 
     static const unsigned IMAX ; 
     static CSGFoundry* Load(const char* base, const char* rel);
     static CSGFoundry* Load(const char* dir );
@@ -102,6 +107,9 @@ struct CSGFoundry
     const CSGNode*    getSolidPrimNode(unsigned solidIdx, unsigned primIdxRel, unsigned nodeIdxRel) const ;
 
     void getMeshPrim(std::vector<CSGPrim>& select_prim, unsigned mesh_idx ) const ;
+    unsigned getNumMeshPrim(unsigned mesh_idx ) const ;
+    std::string descMeshPrim() const ;  
+
 
 
     CSGSolid* addSolid(unsigned num_prim, const char* label );
@@ -167,11 +175,15 @@ struct CSGFoundry
     const qat4* getInstanceGAS(unsigned gas_idx_ , unsigned ordinal=0) ;
 
 
-    int getCenterExtent(float4& ce, int midx, int mord, int iidx=-1);
-    int getLocalCenterExtent( float4& lce, int midx, int mord);
-    int getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx) ; 
+    int getCenterExtent(float4& ce, int midx, int mord, int iidx=-1) const ;
+    int getLocalCenterExtent( float4& lce, int midx, int mord) const ;
+    int getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx) const ; 
+
+    void parseMOI(int& midx, int& mord, int& iidx, const char* moi) const ; 
 
 
+
+    std::vector<std::string> name ;  // meshNames from GGeo/GMeshLib (G4VSolid names from Geant4)
     std::vector<CSGSolid>  solid ;   
     std::vector<CSGPrim>   prim ; 
     std::vector<CSGNode>   node ; 
@@ -180,18 +192,16 @@ struct CSGFoundry
     std::vector<qat4>      itra ;  
     std::vector<qat4>      inst ;  
 
-    CSGSolid*   d_solid ; 
     CSGPrim*    d_prim ; 
     CSGNode*    d_node ; 
-    float4*  d_plan ; 
-    qat4*    d_tran ; 
-    qat4*    d_itra ; 
-
+    float4*     d_plan ; 
+    qat4*       d_itra ; 
 
     std::vector<unsigned>  ins ; 
     std::vector<unsigned>  gas ; 
     std::vector<unsigned>  ias ; 
 
+    CSGName*    id ; 
 
 
 };

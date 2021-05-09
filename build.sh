@@ -7,22 +7,27 @@ name=$(basename $sdir)
 bdir=/tmp/$USER/opticks/$name/build 
 echo $msg bdir $bdir 
 
-rm -rf $bdir && mkdir -p $bdir 
-[ ! -d $bdir ] && exit 1
+#rm -rf $bdir 
 
-cd $bdir && pwd 
+if [ ! -d "$bdir" ]; then
 
-echo $msg CMAKE_PREFIX_PATH 
-echo $CMAKE_PREFIX_PATH | tr ":" "\n"
+    mkdir -p $bdir 
+    cd $bdir && pwd 
 
+    echo $msg CMAKE_PREFIX_PATH 
+    echo $CMAKE_PREFIX_PATH | tr ":" "\n"
 
-[ -z "$OPTICKS_PREFIX" ] && echo $msg MISSING OPTICKS_PREFIX && exit 1
+    [ -z "$OPTICKS_PREFIX" ] && echo $msg MISSING OPTICKS_PREFIX && exit 1
 
-cmake $sdir \
-     -DCMAKE_BUILD_TYPE=Debug \
-     -DOPTICKS_PREFIX=$OPTICKS_PREFIX \
-     -DCMAKE_MODULE_PATH=${OPTICKS_HOME}/cmake/Modules \
-     -DCMAKE_INSTALL_PREFIX=${OPTICKS_PREFIX}
+    cmake $sdir \
+         -DCMAKE_BUILD_TYPE=Debug \
+         -DOPTICKS_PREFIX=$OPTICKS_PREFIX \
+         -DCMAKE_MODULE_PATH=${OPTICKS_HOME}/cmake/Modules \
+         -DCMAKE_INSTALL_PREFIX=${OPTICKS_PREFIX}
+
+else
+    cd $bdir && pwd 
+fi 
 
 
 make

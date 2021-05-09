@@ -15,20 +15,20 @@
 #include "CSGSolid.h"
 #include "CU.h"
 #include "CSGFoundry.h"
+#include "CSGName.h"
 #include "AABB.h"
-
-
 
 const unsigned CSGFoundry::IMAX = 50000 ; 
 
+const plog::Severity CSGFoundry::LEVEL = PLOG::EnvLevel("CSGFoundry", "DEBUG" ); 
+
 CSGFoundry::CSGFoundry()
     :
-    d_solid(nullptr),
     d_prim(nullptr),
     d_node(nullptr),
     d_plan(nullptr),
-    d_tran(nullptr),
-    d_itra(nullptr)
+    d_itra(nullptr),
+    id(new CSGName(this))
 {
     init(); 
 }
@@ -598,7 +598,40 @@ void CSGFoundry::getMeshPrim(std::vector<CSGPrim>& select_prim, unsigned mesh_id
 {
     CSGPrim::select_prim_mesh(prim, select_prim, mesh_idx); 
 }
+unsigned CSGFoundry::getNumMeshPrim(unsigned mesh_idx ) const 
+{
+    return CSGPrim::count_prim_mesh(prim, mesh_idx); 
+}
 
+std::string CSGFoundry::descMeshPrim() const 
+{
+    std::stringstream ss ; 
+    unsigned numName = id->getNumName(); 
+    ss 
+        << "CSGFoundry::descMeshPrim  id.numName " << numName << std::endl  
+        << std::setw(4) << "midx"
+        << " "
+        << std::setw(12) << "numMeshPrim"
+        << " "
+        << "meshName"
+        << std::endl
+        ;
+
+    for(unsigned midx=0 ; midx < numName ; midx++)
+    {
+        const char* meshName = id->getName(midx); 
+        unsigned numMeshPrim = getNumMeshPrim(midx); 
+        ss 
+            << std::setw(4) << midx 
+            << " "
+            << std::setw(12) << numMeshPrim 
+            << " "
+            << meshName
+            << std::endl 
+            ;
+    }
+    return ss.str(); 
+}
 
 
 
@@ -1061,6 +1094,8 @@ void CSGFoundry::write(const char* base, const char* rel) const
 void CSGFoundry::write(const char* dir) const 
 {
     LOG(info) << dir ; 
+
+    NP::WriteNames( dir, "name.txt", name );
               
     if(solid.size() > 0 ) NP::Write(dir, "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
     if(prim.size() > 0 ) NP::Write(dir, "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
@@ -1071,6 +1106,23 @@ void CSGFoundry::write(const char* dir) const
     if(inst.size() > 0 ) NP::Write(dir, "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
 }
 
+void CSGFoundry::load( const char* dir_ )
+{
+    const char* dir = SPath::Resolve(dir_); 
+    LOG(info) << "[ " << dir ; 
+
+    NP::ReadNames( dir, "name.txt", name );
+
+    loadArray( solid , dir, "solid.npy" ); 
+    loadArray( prim  , dir, "prim.npy" ); 
+    loadArray( node  , dir, "node.npy" ); 
+    loadArray( tran  , dir, "tran.npy" ); 
+    loadArray( itra  , dir, "itra.npy" ); 
+    loadArray( inst  , dir, "inst.npy" ); 
+    loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
+
+    LOG(info) << "]" ; 
+}
 
 
 CSGFoundry*  CSGFoundry::Load(const char* dir) // static
@@ -1096,22 +1148,6 @@ void CSGFoundry::load( const char* base, const char* rel )
     load( dir.c_str() ); 
 }
 
-void CSGFoundry::load( const char* dir_ )
-{
-    const char* dir = SPath::Resolve(dir_); 
-    LOG(info) << "[ " << dir ; 
-
-    loadArray( solid , dir, "solid.npy" ); 
-    loadArray( prim  , dir, "prim.npy" ); 
-    loadArray( node  , dir, "node.npy" ); 
-    loadArray( tran  , dir, "tran.npy" ); 
-    loadArray( itra  , dir, "itra.npy" ); 
-    loadArray( inst  , dir, "inst.npy" ); 
-    loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
-
-    LOG(info) << "]" ; 
-}
-
 
 template<typename T>
 void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* name )
@@ -1120,7 +1156,7 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
     bool quiet = false ; 
     if(a == nullptr)
     { 
-        if(!quiet) LOG(info) << "FAIL for " << dir <<  "/" << name ; 
+        LOG(LEVEL) << "FAIL for " << dir <<  "/" << name ; 
     }
     else
     { 
@@ -1129,7 +1165,7 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
         unsigned nj = a->shape[1] ; 
         unsigned nk = a->shape[2] ; 
 
-        if(!quiet) LOG(info) 
+        LOG(LEVEL) 
                 << " ni " << std::setw(5) << ni 
                 << " nj " << std::setw(1) << nj 
                 << " nk " << std::setw(1) << nk 
@@ -1155,15 +1191,12 @@ void CSGFoundry::upload()
     LOG(info) << "[ " << desc() ; 
     assert( tran.size() == itra.size() ); 
 
-    d_solid = solid.size() > 0 ? CU::UploadArray<CSGSolid>(solid.data(), solid.size() ) : nullptr ; 
     d_prim = prim.size() > 0 ? CU::UploadArray<CSGPrim>(prim.data(), prim.size() ) : nullptr ; 
     d_node = node.size() > 0 ? CU::UploadArray<CSGNode>(node.data(), node.size() ) : nullptr ; 
     d_plan = plan.size() > 0 ? CU::UploadArray<float4>(plan.data(), plan.size() ) : nullptr ; 
-    d_tran = tran.size() > 0 ? CU::UploadArray<qat4>(tran.data(), tran.size() ) : nullptr ; 
     d_itra = itra.size() > 0 ? CU::UploadArray<qat4>(itra.data(), itra.size() ) : nullptr ; 
 
     LOG(info) << "]"  ; 
-    // note that d_solid and d_tran are not actually used on GPU currently 
 }
 
 void CSGFoundry::inst_find_unique()
@@ -1226,7 +1259,7 @@ std::string CSGFoundry::descGAS() const
 }
 
 
-int CSGFoundry::getCenterExtent(float4& ce, int midx, int mord, int iidx)
+int CSGFoundry::getCenterExtent(float4& ce, int midx, int mord, int iidx) const 
 {
     if( iidx == -1 )
     {
@@ -1242,7 +1275,7 @@ int CSGFoundry::getCenterExtent(float4& ce, int midx, int mord, int iidx)
 }
 
 
-int CSGFoundry::getLocalCenterExtent(float4& lce, int midx, int mord)
+int CSGFoundry::getLocalCenterExtent(float4& lce, int midx, int mord) const 
 {
     // collect prim matching the MIDX and select the ORDINAL one
     std::vector<CSGPrim> prim ; 
@@ -1272,7 +1305,7 @@ int CSGFoundry::getLocalCenterExtent(float4& lce, int midx, int mord)
 }
 
 
-int CSGFoundry::getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx)
+int CSGFoundry::getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx) const 
 {
     std::vector<CSGPrim> prim ; 
     getMeshPrim(prim, midx ); // collect prim matching the MIDX 
@@ -1338,4 +1371,19 @@ int CSGFoundry::getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx)
 
     return 0 ; 
 }
+
+
+/**
+CSGFoundry::parseMOI
+-------------------------
+
+MOI lookups Midx-mOrdinal-Iidx mesh/oridinal-of-mesh/instance-index of solid 
+
+**/
+void CSGFoundry::parseMOI(int& midx, int& mord, int& iidx, const char* moi) const 
+{
+    id->parseMOI(midx, mord, iidx, moi ); 
+}
+
+
 

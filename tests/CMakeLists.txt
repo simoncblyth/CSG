@@ -9,6 +9,7 @@ set(TEST_SOURCES
     CSGSolidTest.cc
     CSGFoundryTest.cc
     CSGFoundryLoadTest.cc
+    CSGNameTest.cc
     CSGScanTest.cc
     TranTest.cc
     CUTest.cc

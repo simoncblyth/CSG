@@ -50,6 +50,7 @@ list(APPEND SOURCES
     CSGSolid.cc
     Tran.cc
     CSGFoundry.cc
+    CSGName.cc
     CSGScan.cc
     CSGView.cc
 )
@@ -69,6 +70,7 @@ list(APPEND CSG_HEADERS
     AABB.h
 
     CSGFoundry.h
+    CSGName.h
     CSGScan.h
     CSGView.h
 )

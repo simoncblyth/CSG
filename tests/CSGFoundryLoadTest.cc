@@ -84,21 +84,8 @@ int test_getGlobalCenterExtent(const CSGFoundry& fd,  float4& gce, int midx, int
 
 
 
-
-int main(int argc, char** argv)
+void test_CE(const CSGFoundry* fd, int midx, int mord, int iidx)
 {
-    OPTICKS_LOG(argc, argv); 
-
-    int midx = SSys::getenvint("MIDX", 130);   // 130 is world box for default CFBASE
-    int mord = SSys::getenvint("MORD", 0 );  
-    int iidx = SSys::getenvint("IIDX",  0);  
-
-    CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
-    LOG(info) << "foundry " << fd->desc() ; 
-    fd->summary(); 
-
-    LOG(info) << " midx " << midx << " mord " << mord << " iidx " << iidx ; 
-
     float4 gce0 = make_float4( 0.f, 0.f, 0.f, 0.f ); 
     int rc0 = test_getGlobalCenterExtent(*fd, gce0, midx, mord, iidx ) ; 
     assert( rc0 == 0 ); 
@@ -114,13 +101,36 @@ int main(int argc, char** argv)
     int rc2 = fd->getCenterExtent(gce2, midx, mord, iidx) ;
     assert( rc2 == 0 ); 
     LOG(info) << " gce2 " << gce2 ; 
+}
 
 
+
+int main(int argc, char** argv)
+{
+    OPTICKS_LOG(argc, argv); 
+
+    CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
+    LOG(info) << "foundry " << fd->desc() ; 
+    //fd->summary(); 
+
+    const char* moi = SSys::getenvvar("MOI", "sWorld:0:0"); 
+    int midx, mord, iidx ; 
+    fd->parseMOI(midx, mord, iidx,  moi ); 
+
+    LOG(info) 
+        << " MOI " << moi 
+        << " midx " << midx 
+        << " mord " << mord 
+        << " iidx " << iidx
+        ; 
+
+    test_CE(fd, midx, mord, iidx); 
 
 
 
     return 0 ; 
 }
+
 
 
 

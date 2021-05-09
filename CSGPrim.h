@@ -126,6 +126,18 @@ struct CSGPrim
         }
     }
 
+    static PRIM_METHOD unsigned count_prim_mesh(const std::vector<CSGPrim>& prims, unsigned mesh_idx_ )
+    {
+        unsigned count = 0u ; 
+        for(unsigned i=0 ; i < prims.size() ; i++)
+        {
+            const CSGPrim& pr = prims[i] ; 
+            unsigned mesh_idx = pr.meshIdx();  
+            if( mesh_idx_ == mesh_idx ) count += 1 ;
+        }
+        return count ; 
+    }
+
 
     std::string desc() const ; 
     static CSGPrimSpec MakeSpec( const CSGPrim* prim0, unsigned primIdx, unsigned numPrim ) ; 
