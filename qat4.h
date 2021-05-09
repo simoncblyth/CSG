@@ -182,8 +182,8 @@ struct qat4
          }
     } 
 
-    // count the number of instances with the provided ias_idx 
-    static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned ias_idx_ )
+    // count the number of instances with the provided ias_idx, that are among the emm if that is non-zero 
+    static QAT4_METHOD unsigned count_ias( const std::vector<qat4>& qv , unsigned ias_idx_, unsigned long long emm)
     {
         unsigned count = 0 ; 
         for(unsigned i=0 ; i < qv.size() ; i++)
@@ -191,19 +191,23 @@ struct qat4
             const qat4& q = qv[i] ; 
             unsigned ins_idx,  gas_idx, ias_idx ; 
             q.getIdentity(ins_idx,  gas_idx, ias_idx);  
-            if( ias_idx_ == ias_idx ) count += 1 ;
+            unsigned long long gas_idx_ull = gas_idx ; 
+            bool gas_enabled = emm == 0ull ? true : emm & ( 0x1ull << gas_idx_ull ) ; 
+            if( ias_idx_ == ias_idx && gas_enabled ) count += 1 ;
         }
         return count ; 
     }
-    // select instances with the provided ias_idx, ordered as they are found
-    static QAT4_METHOD void select_instances_ias(const std::vector<qat4>& qv, std::vector<qat4>& select_qv, unsigned ias_idx_ )
+    // select instances with the provided ias_idx, that are among the emm if that is non-zero,  ordered as they are found
+    static QAT4_METHOD void select_instances_ias(const std::vector<qat4>& qv, std::vector<qat4>& select_qv, unsigned ias_idx_, unsigned long long emm  )
     {
         for(unsigned i=0 ; i < qv.size() ; i++)
         {
             const qat4& q = qv[i] ; 
             unsigned ins_idx,  gas_idx, ias_idx ; 
             q.getIdentity(ins_idx,  gas_idx, ias_idx );  
-            if( ias_idx_ == ias_idx ) select_qv.push_back(q) ;
+            unsigned long long gas_idx_ull = gas_idx ; 
+            bool gas_enabled = emm == 0ull ? true : emm & ( 0x1ull << gas_idx_ull ) ; 
+            if( ias_idx_ == ias_idx && gas_enabled ) select_qv.push_back(q) ;
         }
     }
 

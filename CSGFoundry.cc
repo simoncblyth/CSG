@@ -1221,18 +1221,19 @@ unsigned CSGFoundry::getNumUniqueINS() const
 
 
 
-unsigned CSGFoundry::getNumInstancesIAS(unsigned ias_idx) const
+unsigned CSGFoundry::getNumInstancesIAS(unsigned ias_idx, unsigned long long emm) const
 {
-    return qat4::count_ias(inst, ias_idx );  
+    return qat4::count_ias(inst, ias_idx, emm );  
 }
+void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx, unsigned long long emm ) const 
+{
+    qat4::select_instances_ias(inst, select_inst, ias_idx, emm ) ;
+}
+
+
 unsigned CSGFoundry::getNumInstancesGAS(unsigned gas_idx) const
 {
     return qat4::count_gas(inst, gas_idx );  
-}
-
-void CSGFoundry::getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx ) const 
-{
-    qat4::select_instances_ias(inst, select_inst, ias_idx ) ;
 }
 void CSGFoundry::getInstanceTransformsGAS(std::vector<qat4>& select_inst, unsigned gas_idx ) const 
 {

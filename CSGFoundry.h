@@ -167,8 +167,8 @@ struct CSGFoundry
     unsigned getNumUniqueGAS() const ;
     unsigned getNumUniqueINS() const ;
 
-    unsigned getNumInstancesIAS(unsigned ias_idx) const ;
-    void     getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx ) const ;
+    unsigned getNumInstancesIAS(unsigned ias_idx, unsigned long long emm) const ;
+    void     getInstanceTransformsIAS(std::vector<qat4>& select_inst, unsigned ias_idx, unsigned long long emm ) const ;
 
     unsigned getNumInstancesGAS(unsigned gas_idx) const ;
     void     getInstanceTransformsGAS(std::vector<qat4>& select_inst, unsigned gas_idx ) const ;
