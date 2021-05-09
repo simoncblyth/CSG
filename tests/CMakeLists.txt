@@ -10,6 +10,7 @@ set(TEST_SOURCES
     CSGFoundryTest.cc
     CSGFoundryLoadTest.cc
     CSGNameTest.cc
+    CSGTargetTest.cc
     CSGScanTest.cc
     TranTest.cc
     CUTest.cc

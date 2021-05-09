@@ -119,15 +119,21 @@ int main(int argc, char** argv)
 {
     OPTICKS_LOG(argc, argv); 
 
-    int midx = SSys::getenvint("MIDX", 130);   // 130 is world box for default CFBASE
-    int mord = SSys::getenvint("MORD", 0 );  
-    int iidx = SSys::getenvint("IIDX",  0);  
-
     CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
     LOG(info) << "foundry " << fd->desc() ; 
     fd->summary(); 
 
-    LOG(info) << " midx " << midx << " mord " << mord << " iidx " << iidx ; 
+    const char* moi = SSys::getenvvar("MOI", "sWorld:0:0"); 
+    int midx, mord, iidx ; 
+    fd->parseMOI(midx, mord, iidx,  moi );  
+
+    LOG(info) 
+        << " MOI " << moi 
+        << " midx " << midx 
+        << " mord " << mord 
+        << " iidx " << iidx
+        ;   
+
 
     LOG(info) << fd->descMeshPrim() ; 
 
@@ -138,6 +144,7 @@ int main(int argc, char** argv)
     test_getAbbr(id); 
     //test_parseArg(id, argc, argv); 
     test_parseMOI(id, argc, argv); 
+
 
     return 0 ; 
 }

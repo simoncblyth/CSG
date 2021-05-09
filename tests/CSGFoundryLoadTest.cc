@@ -86,17 +86,6 @@ int test_getGlobalCenterExtent(const CSGFoundry& fd,  float4& gce, int midx, int
 
 void test_CE(const CSGFoundry* fd, int midx, int mord, int iidx)
 {
-    float4 gce0 = make_float4( 0.f, 0.f, 0.f, 0.f ); 
-    int rc0 = test_getGlobalCenterExtent(*fd, gce0, midx, mord, iidx ) ; 
-    assert( rc0 == 0 ); 
-    LOG(info) << " gce0 " << gce0 ; 
-
-    float4 gce1 = make_float4( 0.f, 0.f, 0.f, 0.f ); 
-    int rc1 = fd->getGlobalCenterExtent(gce1, midx, mord, iidx) ;
-    assert( rc1 == 0 ); 
-    LOG(info) << " gce1 " << gce1 ; 
-
-
     float4 gce2 = make_float4( 0.f, 0.f, 0.f, 0.f ); 
     int rc2 = fd->getCenterExtent(gce2, midx, mord, iidx) ;
     assert( rc2 == 0 ); 

@@ -6,6 +6,7 @@
 #include "plog/Severity.h"
 
 struct CSGName ; 
+struct CSGTarget ; 
 
 #include "CSGSolid.h"
 #include "CSGPrim.h"
@@ -175,12 +176,12 @@ struct CSGFoundry
     const qat4* getInstanceGAS(unsigned gas_idx_ , unsigned ordinal=0) ;
 
 
+    // target  
     int getCenterExtent(float4& ce, int midx, int mord, int iidx=-1) const ;
-    int getLocalCenterExtent( float4& lce, int midx, int mord) const ;
-    int getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx) const ; 
 
+    // id 
     void parseMOI(int& midx, int& mord, int& iidx, const char* moi) const ; 
-
+    const char* getName(unsigned midx) const ;  
 
 
     std::vector<std::string> name ;  // meshNames from GGeo/GMeshLib (G4VSolid names from Geant4)
@@ -202,6 +203,7 @@ struct CSGFoundry
     std::vector<unsigned>  ias ; 
 
     CSGName*    id ; 
+    CSGTarget*  target ; 
 
 
 };
