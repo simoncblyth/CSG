@@ -167,6 +167,11 @@ struct CSGFoundry
     const qat4* getInstanceGAS(unsigned gas_idx_ , unsigned ordinal=0) ;
 
 
+    int getCenterExtent(float4& ce, int midx, int mord, int iidx=-1);
+    int getLocalCenterExtent( float4& lce, int midx, int mord);
+    int getGlobalCenterExtent(float4& gce, int midx, int mord, int iidx) ; 
+
+
     std::vector<CSGSolid>  solid ;   
     std::vector<CSGPrim>   prim ; 
     std::vector<CSGNode>   node ; 
