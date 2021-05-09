@@ -27,3 +27,9 @@ foreach(SRC ${TEST_SOURCES})
 endforeach()
 
 
+set(TGT CSGDemoTest)
+add_executable(${TGT} CSGDemoTest.cc DemoGeo.cc DemoGrid.cc)
+target_link_libraries(${TGT} CSG)
+install(TARGETS ${TGT} DESTINATION lib)
+
+
