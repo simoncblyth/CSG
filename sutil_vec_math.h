@@ -2633,11 +2633,11 @@ inline std::ostream& operator<<(std::ostream& os, const float3& v)
     int w = 6 ; 
     os 
        << "(" 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.x 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.x 
        << "," 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.y 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.y 
        << "," 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.z 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.z 
        << ") "  
        ;
     return os; 
@@ -2648,13 +2648,13 @@ inline std::ostream& operator<<(std::ostream& os, const float4& v)
     int w = 6 ; 
     os 
        << "(" 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.x 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.x 
        << "," 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.y
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.y
        << "," 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.z 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.z 
        << "," 
-       << std::setw(w) << std::fixed << std::setprecision(1) << v.w 
+       << std::setw(w) << std::fixed << std::setprecision(3) << v.w 
        << ") "  
        ;
     return os; 

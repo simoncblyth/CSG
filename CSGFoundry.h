@@ -14,6 +14,7 @@ struct CSGTarget ;
 #include "Quad.h"
 #include "qat4.h"
 #include "Tran.h"
+#include "AABB.h"
 
 /**
 CSGFoundry
@@ -57,7 +58,8 @@ struct CSGFoundry
     std::string descGAS() const ;
 
     void summary(const char* msg="CSGFoundry::summary") const ;
-
+    std::string descSolids() const ;
+    std::string descInst(unsigned ias_idx_, unsigned long long emm=~0ull ) const ;
 
     void dump() const ;
     void dumpSolid(unsigned solidIdx ) const ;
@@ -75,6 +77,9 @@ struct CSGFoundry
     std::string descNode(unsigned solidIdx) const  ;
 
 
+    AABB iasBB(unsigned ias_idx_, unsigned long long emm=0ull ) const ;
+    float4 iasCE(unsigned ias_idx_, unsigned long long emm=0ull ) const;
+    void   iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm=0ull ) const;
 
 
     CSGPrimSpec getPrimSpec(       unsigned solidIdx) const ;

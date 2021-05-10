@@ -22,6 +22,8 @@ struct qat4
 {
     quad q0, q1, q2, q3 ; 
 
+
+    // notice that with *right_multiply* the .w column (with identity info) is not used
     QAT4_METHOD float3 right_multiply( const float3& v, const float w ) const 
     { 
         float3 ret;
@@ -39,6 +41,18 @@ struct qat4
         v.y = y ; 
         v.z = z ; 
     }
+    QAT4_METHOD void right_multiply_inplace( float3& v, const float w ) const 
+    { 
+        float x = q0.f.x * v.x + q1.f.x * v.y + q2.f.x * v.z + q3.f.x * w ;
+        float y = q0.f.y * v.x + q1.f.y * v.y + q2.f.y * v.z + q3.f.y * w ;
+        float z = q0.f.z * v.x + q1.f.z * v.y + q2.f.z * v.z + q3.f.z * w ;
+        v.x = x ; 
+        v.y = y ; 
+        v.z = z ; 
+    }
+
+
+    // with *left_multiply* the .w column is used
     QAT4_METHOD float3 left_multiply( const float3& v, const float w ) const 
     { 
         float3 ret;
@@ -119,7 +133,7 @@ struct qat4
     }
 
 
-
+    // .w column looks to be in use : potential bug ? : TODO: compare with longhand approach 
     QAT4_METHOD void transform_aabb_inplace( float* aabb ) const 
     {
         float4 xa = q0.f * *(aabb+0) ; 
@@ -256,6 +270,17 @@ struct qat4
         return index ;  
     }
 
+    QAT4_METHOD void right_multiply_inplace( std::vector<float3>& points, const float w ) const 
+    {
+        for(int i=0 ; i < int(points.size()) ; i++)
+        {
+            float3& p = points[i] ;
+            right_multiply_inplace( p, w ); 
+        } 
+    }
+
+
+
     static QAT4_METHOD void dump(const std::vector<qat4>& qv);
 
 #endif
@@ -280,8 +305,6 @@ inline std::ostream& operator<<(std::ostream& os, const qat4& v)
 #endif 
 
 
-
-
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
 
@@ -303,11 +326,5 @@ QAT4_FUNCTION void qat4::dump(const std::vector<qat4>& qv)
 
     }
 }
-
-
 #endif 
-
-
-
-
 

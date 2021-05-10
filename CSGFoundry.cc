@@ -176,27 +176,91 @@ template int CSGFoundry::CompareVec(const char*, const std::vector<unsigned>& a,
 
 void CSGFoundry::summary(const char* msg ) const 
 {
-    unsigned num_solids = getNumSolid(); 
-    LOG(info) 
-        << msg
-        << " num_solid " << solid.size()
-        << " num_solids " << num_solids
-        ;
-
-    for(unsigned i=0 ; i < num_solids ; i++)
-    {
-        const CSGSolid* so = getSolid(i); 
-        std::string l4(so->label, 4);  
-        LOG(info) <<  "[" << l4 << "]" << so->center_extent << " " << so->desc()  ;
-    }
-    for(unsigned i=0 ; i < num_solids ; i++)
-    {
-        const CSGSolid* so = getSolid(i); 
-        std::string l4(so->label, 4);  
-        LOG(info) <<  "[" << l4 << "]" << so->numPrim << " " <<  so->primOffset ; 
-    }
+    LOG(info) << msg << std::endl << descSolids() ; 
 }
 
+std::string CSGFoundry::descSolids() const 
+{
+    unsigned num_solids = getNumSolid(); 
+    std::stringstream ss ; 
+    ss << " num_solids " << num_solids << std::endl ;
+
+    for(unsigned i=0 ; i < num_solids ; i++)
+    {
+        const CSGSolid* so = getSolid(i); 
+        ss << " " << so->desc() << std::endl ;
+    }
+    std::string s = ss.str(); 
+    return s ; 
+}
+
+
+std::string CSGFoundry::descInst(unsigned ias_idx_, unsigned long long emm ) const
+{
+    std::stringstream ss ; 
+    for(unsigned i=0 ; i < inst.size() ; i++)
+    {
+        const qat4& q = inst[i] ;      
+        unsigned ins_idx, gas_idx, ias_idx ; 
+        q.getIdentity(ins_idx, gas_idx, ias_idx);
+        bool gas_enabled = emm == 0ull ? true : ( emm & (0x1ull << gas_idx)) ;  
+        if( ias_idx_ == ias_idx && gas_enabled )
+        {
+            const CSGSolid* so = getSolid(gas_idx); 
+            ss 
+                << " ins " << std::setw(5) << ins_idx                
+                << " gas " << std::setw(2) << gas_idx                
+                << " ias " << std::setw(1) << ias_idx                
+                << " so " << so->desc()
+                << std::endl
+                ;
+        }
+    }
+    std::string s = ss.str(); 
+    return s ; 
+}
+
+
+// bbox of the IAS by tranforming the center_extent cubes of all instances
+// hmm: could get a smaller bbox by using the bbox and not the ce of the instances 
+// need to add bb to solid...
+AABB CSGFoundry::iasBB(unsigned ias_idx_, unsigned long long emm ) const
+{
+    AABB bb = {} ;
+    std::vector<float3> corners ; 
+    for(unsigned i=0 ; i < inst.size() ; i++)
+    {
+        const qat4& q = inst[i] ;      
+        unsigned ins_idx, gas_idx, ias_idx ; 
+        q.getIdentity(ins_idx, gas_idx, ias_idx);
+        bool gas_enabled = emm == 0ull ? true : ( emm & (0x1ull << gas_idx)) ;  
+        if( ias_idx_ == ias_idx && gas_enabled )
+        {
+            const CSGSolid* so = getSolid(gas_idx); 
+            corners.clear();       
+            AABB::cube_corners(corners, so->center_extent);
+            q.right_multiply_inplace( corners, 1.f );
+            for(int i=0 ; i < int(corners.size()) ; i++) bb.include_point(corners[i]) ; 
+        }
+    }
+    return bb ; 
+}
+
+
+
+
+void CSGFoundry::iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm ) const
+{
+    AABB bb = iasBB(ias_idx_, emm); 
+    bb.center_extent(ce) ;
+}
+
+float4 CSGFoundry::iasCE(unsigned ias_idx_, unsigned long long emm ) const
+{
+    float4 ce = make_float4( 0.f, 0.f, 0.f, 0.f ); 
+    iasCE(ce, ias_idx_, emm );
+    return ce ; 
+}
 
 
 void CSGFoundry::dump() const 
@@ -1111,7 +1175,7 @@ void CSGFoundry::write(const char* dir) const
 void CSGFoundry::load( const char* dir_ )
 {
     const char* dir = SPath::Resolve(dir_); 
-    LOG(info) << "[ " << dir ; 
+    LOG(info) << dir ; 
 
     NP::ReadNames( dir, "name.txt", name );
 
@@ -1122,8 +1186,6 @@ void CSGFoundry::load( const char* dir_ )
     loadArray( itra  , dir, "itra.npy" ); 
     loadArray( inst  , dir, "inst.npy" ); 
     loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
-
-    LOG(info) << "]" ; 
 }
 
 
@@ -1146,7 +1208,6 @@ void CSGFoundry::load( const char* base, const char* rel )
     std::stringstream ss ;   
     ss << base << "/" << rel ; 
     std::string dir = ss.str();   
-
     load( dir.c_str() ); 
 }
 
@@ -1167,12 +1228,7 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
         unsigned nj = a->shape[1] ; 
         unsigned nk = a->shape[2] ; 
 
-        LOG(LEVEL) 
-                << " ni " << std::setw(5) << ni 
-                << " nj " << std::setw(1) << nj 
-                << " nk " << std::setw(1) << nk 
-                << " " << dir <<  "/" << name 
-                ; 
+        //LOG(LEVEL) << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name ; 
 
         vec.clear(); 
         vec.resize(ni); 
@@ -1281,6 +1337,16 @@ const char* CSGFoundry::getName(unsigned midx) const
 
 int CSGFoundry::getCenterExtent(float4& ce, int midx, int mord, int iidx) const 
 {
-    return target->getCenterExtent(ce, midx, mord, iidx);  
+    int rc = 0 ; 
+    if( midx == -1 )
+    {
+        unsigned long long emm = 0ull ;   // hmm instance var ?
+        iasCE(ce, emm); 
+    }
+    else
+    {
+        rc = target->getCenterExtent(ce, midx, mord, iidx);    // should use emm ?
+    }
+    return rc ; 
 }
 

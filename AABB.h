@@ -2,8 +2,11 @@
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
+   #include <sstream>
    #include <iostream>
    #include <iomanip>
+   #include <vector>
+   #include <string>
 #endif 
 
 #define AABB_METHOD inline 
@@ -19,10 +22,18 @@ struct AABB
     float3 center() const ; 
     float  extent() const ; 
     float4 center_extent() const ;     
+    void center_extent(float4& ce) const ; 
 
     bool empty() const ; 
     void include_point(const float* point); 
+    void include_point(const float3& p);
     void include_aabb( const float* aabb);
+
+#if defined(__CUDACC__) || defined(__CUDABE__)
+#else
+    std::string desc() const ; 
+    static void cube_corners(std::vector<float3>& corners, const float4& ce );
+#endif
 
 }; 
 
@@ -55,6 +66,15 @@ AABB_METHOD float AABB::extent() const
 AABB_METHOD float4 AABB::center_extent() const 
 {
     return make_float4( center(), extent() ); 
+}
+
+AABB_METHOD void AABB::center_extent(float4& ce) const 
+{
+    float3 c = center(); 
+    ce.x = c.x ; 
+    ce.y = c.y ; 
+    ce.z = c.z ; 
+    ce.w = extent() ; 
 }
 
 AABB_METHOD bool AABB::empty() const 
@@ -92,7 +112,11 @@ AABB::include_point
 AABB_METHOD void AABB::include_point(const float* point)
 {
     const float3 p = make_float3( *(point+0), *(point+1), *(point+2) ); 
+    include_point(p); 
+}
 
+AABB_METHOD void AABB::include_point(const float3& p)
+{
     if(empty())
     {
         mn = p ; 
@@ -104,6 +128,9 @@ AABB_METHOD void AABB::include_point(const float* point)
         mx = fmaxf( mx, p );
     }
 }
+
+
+
 
 AABB_METHOD void AABB::include_aabb(const float* aabb)
 {
@@ -140,6 +167,61 @@ inline std::ostream& operator<<(std::ostream& os, const AABB& bb)
        ;
     return os; 
 }
+
+/**
+
+     ZYX 
+   0:000    
+   1:001    +X
+   2:010    +Y
+   3:011
+   4:100    +Z
+   5:101
+   6:110
+   7:111
+
+
+               110----------111         
+                |            |
+                |            |
+  +Z   100----------101      | 
+        |       |    |       | 
+        |       |    |       |
+        |      010---|------011       +Y
+        |            | 
+        |            | 
+  -Z   000----------001        -Y        
+                
+       -X           +X
+
+**/
+
+AABB_METHOD void AABB::cube_corners(std::vector<float3>& corners, const float4& ce )
+{
+    for(int c=0 ; c < 8 ; c++)  // loop around the corners 
+    {
+        float3 a = make_float3( 
+                                ce.x + ( c & 1 ? ce.w : -ce.w ), 
+                                ce.y + ( c & 2 ? ce.w : -ce.w ),   
+                                ce.z + ( c & 4 ? ce.w : -ce.w )
+                              ) ; 
+        corners.push_back(a) ;  
+    }
+}
+
+
+AABB_METHOD std::string AABB::desc() const 
+{
+    std::stringstream ss ; 
+    ss 
+        << " mn " << mn 
+        << " mx " << mx  
+        ; 
+    std::string s = ss.str(); 
+    return s ; 
+}
+ 
+
 #endif 
 
 

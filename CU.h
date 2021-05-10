@@ -1,14 +1,17 @@
 #pragma once
+
+#include "plog/Severity.h"
 #include <vector>
 
 struct CU
 {
+    static const plog::Severity LEVEL ; 
+
     template <typename T>
     static T* UploadArray(const T* array, unsigned num_items ) ; 
 
     template <typename T>
     static T* DownloadArray(const T* array, unsigned num_items ) ; 
-
 
 
     template <typename T>

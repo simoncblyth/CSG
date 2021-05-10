@@ -2,6 +2,7 @@
 
 #include "sutil_vec_math.h"
 
+#include <cmath>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -9,6 +10,7 @@
 #include <iomanip>
 
 #include "qat4.h"
+#include "AABB.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -263,14 +265,13 @@ void test_multiply_inplace()
 
 
 
-struct AABB{ float3 mn, mx ; } ;
-
+/*
 inline std::ostream& operator<<(std::ostream& os, const AABB& v)
 {
     os << " mn " << v.mn  << " mx " << v.mx ;
     return os; 
 }
-
+*/
 
 void test_transform_aabb_inplace()
 {
@@ -340,10 +341,12 @@ void test_find_unique()
         << desc("ias", ias ) << std::endl  
         ;
 
+
+    unsigned long long emm = 0ull ; 
     for(unsigned i=0 ; i < ias.size() ; i++)
     {
         unsigned ias_idx = ias[i]; 
-        unsigned num_ins = qat4::count_ias(qq, ias_idx ); 
+        unsigned num_ins = qat4::count_ias(qq, ias_idx, emm ); 
         std::cout 
             << " ias_idx " << std::setw(3) << ias_idx
             << " num_ins " << std::setw(3) << num_ins
@@ -353,9 +356,128 @@ void test_find_unique()
 }
 
 
+void test_right_multiply_translate()
+{
+    float3 t = make_float3( 100.f, 200.f, 300.f ); 
+
+    qat4 q ; 
+    q.q3.f.x = t.x ; 
+    q.q3.f.y = t.y ; 
+    q.q3.f.z = t.z ; 
+
+    q.setIdentity( 42, 43, 44 ); 
+
+    std::cout << q << std::endl ; 
+
+    float3 a = make_float3(0.f, 0.f, 0.f); 
+    float3 b = q.right_multiply(a, 1.f ); 
+
+    std::cout << " t " << t << std::endl ; 
+    std::cout << " a " << a << std::endl ; 
+    std::cout << " b " << b << std::endl ; 
+
+    assert( b.x == a.x + t.x ); 
+    assert( b.y == a.y + t.y ); 
+    assert( b.z == a.z + t.z ); 
+}
+
+void test_right_multiply_scale()
+{
+    float3 s = make_float3( 1.f, 2.f, 3.f ); 
+
+    qat4 q ; 
+    q.q0.f.x = s.x ; 
+    q.q1.f.y = s.y ; 
+    q.q2.f.z = s.z ; 
+
+    q.setIdentity( 42, 43, 44 ); 
+
+    std::cout << q << std::endl ; 
+
+    float3 a = make_float3(1.f, 1.f, 1.f); 
+    float3 b = q.right_multiply(a, 1.f ); 
+
+    std::cout << " s " << s << std::endl ; 
+    std::cout << " a " << a   << std::endl ; 
+    std::cout << " b " << b   << std::endl ; 
+
+    assert( b.x == a.x*s.x ); 
+    assert( b.y == a.y*s.y ); 
+    assert( b.z == a.z*s.z ); 
+}
+
+void test_right_multiply_rotate()
+{
+    float th = M_PI/4.f ; // 45 degrees 
+    float ct = cos(th); 
+    float st = sin(th); 
+
+    qat4 q ;   //  rotate about Z axis 
+    q.q0.f.x = ct  ;   q.q0.f.y = -st  ;  q.q0.f.z = 0.f ; 
+    q.q1.f.x = st  ;   q.q1.f.y =  ct  ;  q.q1.f.z = 0.f ; 
+    q.q2.f.x = 0.f ;   q.q2.f.y =  0.f ;  q.q2.f.z = 1.f ; 
+
+    q.setIdentity( 42, 43, 44 ); 
+
+    float3 a = make_float3(0.f, 1.f, 0.f); 
+    float3 b = q.right_multiply(a, 1.f ); 
+
+    std::cout << " q " << q << std::endl ; 
+    std::cout << " a " << a   << std::endl ; 
+    std::cout << " b " << b   << std::endl ; 
+}
+
+void test_cube_corners()
+{
+    float4 ce = make_float4( 0.f , 0.f, 0.f, 1.f ); 
+    std::vector<float3> corners ; 
+    AABB::cube_corners(corners, ce); 
+
+    for(int i=0 ; i < int(corners.size()) ; i++)
+    {
+        const float3& a = corners[i] ; 
+        std::cout << i << ":" << a << std::endl ; 
+    }
+}
+
+
+
+void test_transform_aabb_inplace_2()
+{
+    float tx = 100.f ; 
+    float ty =   0.f ; 
+    float tz =   0.f ; 
+
+    qat4 q ; 
+    q.q3.f.x = tx ; 
+    q.q3.f.y = ty ; 
+    q.q3.f.z = tz ; 
+
+    std::cout << q << std::endl ; 
+
+    AABB aabb = { -100.f, -100.f, -100.f, 100.f, 100.f, 100.f } ; 
+    std::cout << "aabb " << aabb << std::endl ; 
+    q.transform_aabb_inplace((float*)&aabb);
+    std::cout << "aabb " << aabb << std::endl ; 
+}
+
+
+
+
+
+
+
 int main(int argc, char** argv)
 {
     //test_transform_aabb_inplace();
-    test_find_unique();
+    //test_find_unique();
+
+    //test_right_multiply_translate(); 
+    //test_right_multiply_scale(); 
+    //test_right_multiply_rotate(); 
+    //test_cube_corners(); 
+    test_transform_aabb_inplace_2();
     return 0 ; 
 }
+
+
