@@ -247,7 +247,14 @@ AABB CSGFoundry::iasBB(unsigned ias_idx_, unsigned long long emm ) const
 }
 
 
-
+void CSGFoundry::gasCE(float4& ce, unsigned gas_idx ) const
+{
+    const CSGSolid* so = getSolid(gas_idx); 
+    ce.x = so->center_extent.x ; 
+    ce.y = so->center_extent.y ; 
+    ce.z = so->center_extent.z ; 
+    ce.w = so->center_extent.w ; 
+}
 
 void CSGFoundry::iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm ) const
 {

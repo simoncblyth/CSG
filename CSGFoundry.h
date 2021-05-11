@@ -80,6 +80,7 @@ struct CSGFoundry
     AABB iasBB(unsigned ias_idx_, unsigned long long emm=0ull ) const ;
     float4 iasCE(unsigned ias_idx_, unsigned long long emm=0ull ) const;
     void   iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm=0ull ) const;
+    void   gasCE(float4& ce, unsigned gas_idx ) const ;
 
 
     CSGPrimSpec getPrimSpec(       unsigned solidIdx) const ;
