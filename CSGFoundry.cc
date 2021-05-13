@@ -7,6 +7,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "SStr.hh"
 #include "SPath.hh"
 #include "NP.hh"
 #include "PLOG.hh"
@@ -141,6 +142,7 @@ int CSGFoundry::Compare( const CSGFoundry* a, const CSGFoundry* b )
     mismatch += CompareVec( "ins"  , a->ins , b->ins ); 
     mismatch += CompareVec( "gas"  , a->gas , b->gas ); 
     mismatch += CompareVec( "ias"  , a->ias , b->ias ); 
+    if( mismatch != 0 ) LOG(fatal) << " mismatch FAIL ";  
     assert( mismatch == 0 ); 
     return mismatch ; 
 }
@@ -162,6 +164,9 @@ int CSGFoundry::CompareVec( const char* name, const std::vector<T>& a, const std
     if(byte_match != 0) LOG(info) << name << " sizeof(T) " << sizeof(T) << " byte_match FAIL " ; 
     if(byte_match != 0) mismatch += 1 ; 
 
+    if( mismatch != 0 ) LOG(fatal) << " mismatch FAIL for " << name ;  
+    if( mismatch != 0 ) std::cout << " mismatch FAIL for " << name << std::endl ;  
+    assert( mismatch == 0 ); 
     return mismatch ; 
 }
 
@@ -309,8 +314,35 @@ void CSGFoundry::dumpSolid(unsigned solidIdx) const
     } 
 }
 
+int CSGFoundry::findSolidIdx(const char* label) const 
+{
+    int idx = -1 ; 
+    if( label == nullptr ) return idx ; 
+    for(unsigned i=0 ; i < solid.size() ; i++)
+    {
+        const CSGSolid& so = solid[i]; 
+        if(strcmp(so.label, label) == 0) idx = i ;        
+    }
+    return idx ; 
+}
 
+/**
+CSGFoundry::findSolidIdx
+--------------------------
 
+Find multiple idx with labels starting "r1p" or "r2p" 
+
+**/
+
+void CSGFoundry::findSolidIdx(std::vector<unsigned>& solid_idx, const char* label) const 
+{
+    if( label == nullptr ) return ; 
+    for(unsigned i=0 ; i < solid.size() ; i++)
+    {
+        const CSGSolid& so = solid[i]; 
+        if(SStr::StartsWith(so.label, label)) solid_idx.push_back(i) ; 
+    }
+}
 
 
 void CSGFoundry::dumpPrim() const 
@@ -1204,7 +1236,7 @@ void CSGFoundry::write(const char* dir) const
 
     NP::WriteNames( dir, "name.txt", name );
               
-    if(solid.size() > 0 ) NP::Write(dir, "solid.npy",  (int*)solid.data(),  solid.size(),  2, 4 ); 
+    if(solid.size() > 0 ) NP::Write(dir, "solid.npy",  (int*)solid.data(),  solid.size(), 3, 4 ); 
     if(prim.size() > 0 ) NP::Write(dir, "prim.npy",   (float*)prim.data(), prim.size(),   4, 4 ); 
     if(node.size() > 0 ) NP::Write(dir, "node.npy",   (float*)node.data(), node.size(),   4, 4 ); 
     if(plan.size() > 0 ) NP::Write(dir, "plan.npy",   (float*)plan.data(), plan.size(),   1, 4 ); 

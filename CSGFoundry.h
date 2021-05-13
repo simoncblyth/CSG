@@ -66,8 +66,8 @@ struct CSGFoundry
 
     void dump() const ;
     void dumpSolid(unsigned solidIdx ) const ;
-
-
+    int findSolidIdx(const char* label) const  ; // -1 if not found
+    void findSolidIdx(std::vector<unsigned>& solid_idx, const char* label) const ; 
 
     void dumpPrim() const ;
     void dumpPrim(unsigned solidIdx ) const ;

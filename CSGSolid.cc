@@ -16,7 +16,7 @@ CSGSolid CSGSolid::Make( const char* label_, int numPrim_, int primOffset_ )
 {
     CSGSolid so = {} ; 
 
-    strncpy( so.label, label_, sizeof(label) );
+    strncpy( so.label, label_, sizeof(so.label) );
     so.numPrim = numPrim_ ; 
     so.primOffset = primOffset_ ; 
     so.type = STANDARD_SOLID ;  
@@ -30,7 +30,7 @@ std::string CSGSolid::desc() const
     std::string label8(label, 8); 
     std::stringstream ss ; 
     ss << "CSGSolid " 
-       << std::setw(9) << label8 
+       << std::setw(9) << label8.c_str()
        << " primNum/Offset " 
        << std::setw(5) << numPrim 
        << std::setw(5) << primOffset
@@ -49,16 +49,27 @@ std::string CSGSolid::desc() const
     return s ; 
 }
 
-std::string CSGSolid::MakeLabel(char type, unsigned idx )
+std::string CSGSolid::MakeLabel(char typ0, unsigned idx0 )
 {
     std::stringstream ss ; 
-    //ss << type << std::setfill('0') << std::setw(3) << idx ; 
-    ss << type << idx ; 
+    ss << typ0 << idx0 ; 
     std::string s = ss.str();  
     return s ; 
 }
-
-
+std::string CSGSolid::MakeLabel(char typ0, unsigned idx0, char typ1, unsigned idx1  )
+{
+    std::stringstream ss ; 
+    ss << typ0 << idx0 << typ1 << idx1 ; 
+    std::string s = ss.str();  
+    return s ; 
+}
+std::string CSGSolid::MakeLabel(char typ0, unsigned idx0, char typ1, unsigned idx1, char typ2, unsigned idx2  )
+{
+    std::stringstream ss ; 
+    ss << typ0 << idx0 << typ1 << idx1 << typ2 << idx2 ; 
+    std::string s = ss.str();  
+    return s ; 
+}
 
 #endif
 
