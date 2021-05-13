@@ -261,6 +261,33 @@ AABB CSGFoundry::iasBB(unsigned ias_idx_, unsigned long long emm ) const
 }
 
 
+
+/**
+CSGFoundry::getMaxExtent
+---------------------------
+
+Kinda assumes the solids are all close to origin. This tends to 
+work for a selection of one prim solids all from the same instance.  
+
+**/
+
+float CSGFoundry::getMaxExtent(const std::vector<unsigned>& solid_selection) const 
+{
+    float mxe = 0.f ; 
+    for(unsigned i=0 ; i < solid_selection.size() ; i++)
+    {   
+        unsigned gas_idx = solid_selection[i] ; 
+        const CSGSolid* so = getSolid(gas_idx); 
+        float4 ce = so->center_extent ; 
+        if(ce.w > mxe) mxe = ce.w ; 
+        LOG(info) << " gas_idx " << std::setw(3) << gas_idx << " ce " << ce << " mxe " << mxe ; 
+    }   
+    return mxe ; 
+}
+
+
+
+
 void CSGFoundry::gasCE(float4& ce, unsigned gas_idx ) const
 {
     const CSGSolid* so = getSolid(gas_idx); 
