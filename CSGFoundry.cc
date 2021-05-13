@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <cstring>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -101,9 +102,17 @@ void CSGFoundry::makeDemoGrid()
 
 std::string CSGFoundry::desc() const 
 {
+    unsigned num_solid_total = getNumSolidTotal(); 
+    unsigned num_solid_standard = getNumSolid(STANDARD_SOLID); 
+    unsigned num_solid_oneprim  = getNumSolid(ONE_PRIM_SOLID); 
+    unsigned num_solid_onenode  = getNumSolid(ONE_NODE_SOLID); 
+
     std::stringstream ss ; 
     ss << "CSGFoundry "
-       << " num_solid " << solid.size()
+       << " num_solid_total " << num_solid_total
+       << " num_solid_standard " << num_solid_standard
+       << " num_solid_oneprim " << num_solid_oneprim
+       << " num_solid_onenode " << num_solid_onenode
        << " num_prim " << prim.size()
        << " num_node " << node.size()
        << " num_plan " << plan.size()
@@ -326,9 +335,9 @@ std::string CSGFoundry::descPrim(unsigned solidIdx) const
     if(so)
     {
        if(so->numPrim > 1 ) ss << std::endl ;  
-        for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
+        for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)  
         {
-            const CSGPrim* pr = getPrim(primIdx) ;  
+            const CSGPrim* pr = getPrim(primIdx) ;  // note absolute primIdx
             assert(pr) ; 
             ss << " primIdx " << std::setw(3) << primIdx << " " << pr->desc() << std::endl ; 
         } 
@@ -475,7 +484,23 @@ void CSGFoundry::checkPrimSpec() const
 }
 
 
-unsigned CSGFoundry::getNumSolid() const { return solid.size(); } 
+
+unsigned CSGFoundry::getNumSolid(int type_) const 
+{ 
+    unsigned count = 0 ; 
+    for(unsigned i=0 ; i < solid.size() ; i++)
+    {
+        const CSGSolid& so = solid[i] ; 
+        if(so.type == type_ ) count += 1 ;  
+    } 
+    return count ; 
+} 
+
+unsigned CSGFoundry::getNumSolid() const {  return getNumSolid(STANDARD_SOLID); } 
+unsigned CSGFoundry::getNumSolidTotal() const { return solid.size(); } 
+
+
+
 unsigned CSGFoundry::getNumPrim() const  { return prim.size();  } 
 unsigned CSGFoundry::getNumNode() const  { return node.size(); }
 unsigned CSGFoundry::getNumPlan() const  { return plan.size(); }
@@ -644,7 +669,7 @@ CSGFoundry::addPrim
 Offsets counts for  node, tran and plan are 
 persisted into the CSGPrim. 
 Thus must addPrim prior to adding any node, 
-tran or plan needed for a prim.
+tran or plan needed for that prim.
 
 **/
 
@@ -656,7 +681,7 @@ CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx)
     pr.setTranOffset(tran.size()); 
     pr.setPlanOffset(plan.size()); 
 
-    pr.setSbtIndexOffset(0) ; 
+    pr.setSbtIndexOffset(0) ;  // ?  THIS NEEDS TO BE OVERRIDDEN BY CALLER
     pr.setMeshIdx(meshIdx) ; 
 
     unsigned primIdx = prim.size(); 
@@ -717,23 +742,32 @@ The Prim offset is persisted into the CSGSolid
 thus must addSolid prior to adding any prim
 for the solid. 
 
+The default primOffset_ argument of -1 signifies are about to 
+add fresh Prim and need to obtain the primOffset for the added solid 
+from the number of prim that have been collected previously.
+
+Using a primOffset_ > -1 indicates that the added solid is reusing 
+already existing Prim (eg for debugging) and the primOffset should be
+set from this argument.
+
 **/
 
-CSGSolid* CSGFoundry::addSolid(unsigned num_prim, const char* label )
+CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffset_ )
 {
     unsigned idx = solid.size(); 
     assert( idx < IMAX ); 
 
-    unsigned primOffset = prim.size(); 
-    CSGSolid so = {} ; 
-    memcpy( so.label, label, 4 ); 
-    so.numPrim = num_prim ; 
-    so.primOffset = primOffset ; 
-    so.center_extent = make_float4(0.f, 0.f, 0.f, 100.f) ;  // should be overwritten 
+    int primOffset = primOffset_ < 0 ? prim.size() : primOffset_ ;
+
+    CSGSolid so = CSGSolid::Make( label, numPrim , primOffset ); 
+
+ 
+    so.center_extent = make_float4(0.f, 0.f, 0.f, 0.f) ;  // changed later 
 
     solid.push_back(so); 
     return solid.data() + idx  ; 
 }
+
 
 
 
@@ -790,7 +824,7 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
             assert( 0 && "layered only implemented for sphere and zsphere currently" ); 
         } 
 
-        p->setSbtIndexOffset(i) ; 
+        p->setSbtIndexOffset(i) ;  // huh: Looks to assumme the layered shape is the only geometry ?
         p->setAABB( n->AABB() ); 
     }
     return so ; 

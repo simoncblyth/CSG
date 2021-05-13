@@ -10,12 +10,13 @@ int main(int argc, char** argv)
 {
     const char* path = argc > 1 ? argv[1] : "/tmp/CSGSolidTest.npy" ; 
 
-    CSGSolid r = { "red"  , 1, 0,  0, {1.f, 1.f, 1.f, 1.f } }; 
-    CSGSolid g = { "gre"  , 1, 1,  0, {2.f, 2.f, 2.f, 2.f } };
-    CSGSolid b = { "blu"  , 1, 2,  0, {3.f, 3.f, 3.f, 3.f } }; 
-    CSGSolid c = { "cya"  , 1, 3,  0, {4.f, 4.f, 4.f, 4.f } }; 
-    CSGSolid m = { "mag"  , 1, 4,  0, {5.f, 5.f, 5.f, 5.f } }; 
-    CSGSolid y = { "yel"  , 1, 5,  0, {6.f, 6.f, 6.f, 6.f } }; 
+    CSGSolid r =  CSGSolid::Make("red"  ,    1, 0 ) ; r.center_extent = {1.f, 1.f, 1.f, 1.f } ;
+    CSGSolid g =  CSGSolid::Make("green",    1, 1 ) ; r.center_extent = {2.f, 2.f, 2.f, 2.f } ;
+    CSGSolid b =  CSGSolid::Make("blue",     1, 2 ) ; r.center_extent = {2.f, 2.f, 2.f, 2.f } ;
+    CSGSolid c =  CSGSolid::Make("cyan",     1, 3 ) ; r.center_extent = {3.f, 3.f, 3.f, 3.f } ;
+    CSGSolid m =  CSGSolid::Make("magenta",  1, 4 ) ; r.center_extent = {4.f, 4.f, 4.f, 4.f } ;
+    CSGSolid y =  CSGSolid::Make("yellow",   1, 5 ) ; r.center_extent = {5.f, 5.f, 5.f, 5.f } ;
+
 
     std::vector<CSGSolid> so ; 
 

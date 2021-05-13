@@ -5,9 +5,12 @@
 #include <glm/glm.hpp>
 #include "plog/Severity.h"
 
+
+
 struct CSGName ; 
 struct CSGTarget ; 
 
+#include "CSGEnum.h"
 #include "CSGSolid.h"
 #include "CSGPrim.h"
 #include "CSGNode.h"
@@ -94,7 +97,11 @@ struct CSGFoundry
     const CSGSolid*   getSolid_(int solidIdx) const ;   // -ve counts from back 
     unsigned          getSolidIdx(const CSGSolid* so) const ; 
 
-    unsigned getNumSolid() const; 
+
+    unsigned getNumSolid(int type_) const ;
+    unsigned getNumSolid() const;        // STANDARD_SOLID count 
+    unsigned getNumSolidTotal() const;   // all solid count 
+
     unsigned getNumPrim() const;   
     unsigned getNumNode() const;
     unsigned getNumPlan() const;
@@ -119,7 +126,7 @@ struct CSGFoundry
 
 
 
-    CSGSolid* addSolid(unsigned num_prim, const char* label );
+    CSGSolid* addSolid(unsigned num_prim, const char* label, int primOffset_ = -1 );
     CSGPrim*  addPrim(int num_node, int meshIdx=-1) ;
     CSGNode*  addNode(CSGNode nd, const std::vector<float4>* pl=nullptr );
     CSGNode*  addNodes(const std::vector<CSGNode>& nds );

@@ -75,6 +75,7 @@ list(APPEND CSG_HEADERS
     CSGTarget.h
     CSGScan.h
     CSGView.h
+    CSGEnum.h
 )
 
 list(APPEND INTERSECT_HEADERS
