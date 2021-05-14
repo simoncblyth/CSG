@@ -131,7 +131,6 @@ void test_getInstanceGAS()
     LOG(info) << *q ; 
 }
 
-
 int main(int argc, char** argv)
 {
     OPTICKS_LOG(argc, argv); 

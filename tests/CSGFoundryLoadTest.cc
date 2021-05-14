@@ -94,14 +94,8 @@ void test_CE(const CSGFoundry* fd, int midx, int mord, int iidx)
 
 
 
-int main(int argc, char** argv)
+void test_parseMOI(const CSGFoundry* fd)
 {
-    OPTICKS_LOG(argc, argv); 
-
-    CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
-    LOG(info) << "foundry " << fd->desc() ; 
-    //fd->summary(); 
-
     const char* moi = SSys::getenvvar("MOI", "sWorld:0:0"); 
     int midx, mord, iidx ; 
     fd->parseMOI(midx, mord, iidx,  moi ); 
@@ -114,8 +108,37 @@ int main(int argc, char** argv)
         ; 
 
     test_CE(fd, midx, mord, iidx); 
+}
 
 
+void test_findSolidIdx(const CSGFoundry* fd, int argc, char** argv)
+{
+    std::vector<unsigned> solid_selection ; 
+    for(int i=1 ; i < argc ; i++)
+    {
+        const char* sla = argv[i] ;  
+        solid_selection.clear(); 
+        fd->findSolidIdx(solid_selection, sla );   
+
+        LOG(info) 
+            << " SLA " << sla 
+            << " solid_selection.size " << solid_selection.size() 
+            << std::endl 
+            << fd->descSolids(solid_selection) 
+            ; 
+    }
+}
+
+int main(int argc, char** argv)
+{
+    OPTICKS_LOG(argc, argv); 
+
+    CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
+    LOG(info) << "foundry " << fd->desc() ; 
+    //fd->summary(); 
+
+    //test_parseMOI(fd); 
+    test_findSolidIdx(fd, argc, argv); 
 
     return 0 ; 
 }

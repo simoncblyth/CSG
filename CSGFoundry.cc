@@ -197,7 +197,11 @@ std::string CSGFoundry::descSolids() const
 {
     unsigned num_solids = getNumSolid(); 
     std::stringstream ss ; 
-    ss << " num_solids " << num_solids << std::endl ;
+    ss 
+        << "CSGFoundry::descSolids"
+        << " num_solids " << num_solids 
+        << std::endl
+        ;
 
     for(unsigned i=0 ; i < num_solids ; i++)
     {
@@ -285,8 +289,21 @@ float CSGFoundry::getMaxExtent(const std::vector<unsigned>& solid_selection) con
     return mxe ; 
 }
 
-
-
+std::string CSGFoundry::descSolids(const std::vector<unsigned>& solid_selection) const 
+{
+    std::stringstream ss ; 
+    ss << "CSGFoundry::descSolids solid_selection " << solid_selection.size() << std::endl ; 
+    for(unsigned i=0 ; i < solid_selection.size() ; i++)
+    {   
+        unsigned gas_idx = solid_selection[i] ; 
+        const CSGSolid* so = getSolid(gas_idx); 
+        //float4 ce = so->center_extent ; 
+        //ss << " gas_idx " << std::setw(3) << gas_idx << " ce " << ce << std::endl ; 
+        ss << so->desc() << std::endl ;  
+    }   
+    std::string s = ss.str(); 
+    return s ; 
+}
 
 void CSGFoundry::gasCE(float4& ce, unsigned gas_idx ) const
 {
@@ -357,7 +374,10 @@ int CSGFoundry::findSolidIdx(const char* label) const
 CSGFoundry::findSolidIdx
 --------------------------
 
-Find multiple idx with labels starting "r1p" or "r2p" 
+Find multiple idx with labels starting with the provided string, eg "r1", "r2", "r1p" or "r2p" 
+
+This uses SStr:SimpleMatch which implements simple pattern matching with '$' 
+indicating the terminator forcing exact entire match of what is prior to the '$'
 
 **/
 
@@ -367,7 +387,7 @@ void CSGFoundry::findSolidIdx(std::vector<unsigned>& solid_idx, const char* labe
     for(unsigned i=0 ; i < solid.size() ; i++)
     {
         const CSGSolid& so = solid[i]; 
-        if(SStr::StartsWith(so.label, label)) solid_idx.push_back(i) ; 
+        if(SStr::SimpleMatch(so.label, label)) solid_idx.push_back(i) ; 
     }
 }
 
@@ -1107,17 +1127,11 @@ CSGSolid* CSGFoundry::makeCone(const char* label, float r1, float z1, float r2, 
     return makeSolid11(label, nd, nullptr, CONE_MIDX ); 
 }
 
-
-
-
 CSGSolid* CSGFoundry::makeHyperboloid(const char* label, float r0, float zf, float z1, float z2)
 {
     CSGNode nd = CSGNode::Hyperboloid( r0, zf, z1, z2 ); 
     return makeSolid11(label, nd, nullptr, HYPE_MIDX ); 
 }
-
-
-
 
 CSGSolid* CSGFoundry::makeBox3(const char* label, float fx, float fy, float fz )
 {
@@ -1125,16 +1139,11 @@ CSGSolid* CSGFoundry::makeBox3(const char* label, float fx, float fy, float fz )
     return makeSolid11(label, nd, nullptr, BOX3_MIDX ); 
 }
 
-
-
 CSGSolid* CSGFoundry::makePlane(const char* label, float nx, float ny, float nz, float d)
 {
     CSGNode nd = CSGNode::Plane(nx, ny, nz, d ); 
     return makeSolid11(label, nd, nullptr, PLAN_MIDX ); 
 }
-
-
-
 
 CSGSolid* CSGFoundry::makeSlab(const char* label, float nx, float ny, float nz, float d1, float d2 )
 {
@@ -1142,15 +1151,11 @@ CSGSolid* CSGFoundry::makeSlab(const char* label, float nx, float ny, float nz, 
     return makeSolid11(label, nd, nullptr, SLAB_MIDX ); 
 }
 
-
-
-
 CSGSolid* CSGFoundry::makeCylinder(const char* label, float px, float py, float radius, float z1, float z2)
 {
     CSGNode nd = CSGNode::Cylinder( px, py, radius, z1, z2 ); 
     return makeSolid11(label, nd, nullptr, CYLI_MIDX ); 
 }
-
 
 CSGSolid* CSGFoundry::makeDisc(const char* label, float px, float py, float ir, float r, float z1, float z2)
 {
