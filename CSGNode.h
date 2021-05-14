@@ -181,6 +181,9 @@ struct CSGNode
     static std::string Desc(const float* fval, int numval=6, int wid=7, int prec=1 ); 
     std::string desc() const ; 
     static void Dump(const CSGNode* n, unsigned ni, const char* label);  
+    bool is_operator() const ; 
+    bool is_leaf() const ; 
+    bool is_zero() const ; 
 
     static const float UNBOUNDED_DEFAULT_EXTENT ; 
 

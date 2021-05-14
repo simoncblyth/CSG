@@ -142,6 +142,25 @@ CSGNode CSGNode::BooleanOperator(char op)   // static
     return nd ; 
 }
 
+
+
+bool CSGNode::is_operator() const 
+{
+    unsigned tc = typecode(); 
+    return CSG::IsOperator((OpticksCSG_t)tc) ;
+}
+bool CSGNode::is_zero() const 
+{
+    unsigned tc = typecode(); 
+    return CSG::IsZero((OpticksCSG_t)tc)  ;
+}
+bool CSGNode::is_leaf() const 
+{
+    unsigned tc = typecode(); 
+    return CSG::IsPrimitive((OpticksCSG_t)tc)  ;
+}
+
+
 void CSGNode::setAABBLocal()
 {
     unsigned tc = typecode(); 

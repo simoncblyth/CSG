@@ -127,7 +127,7 @@ struct CSGFoundry
 
 
     CSGSolid* addSolid(unsigned num_prim, const char* label, int primOffset_ = -1 );
-    CSGPrim*  addPrim(int num_node, int meshIdx=-1) ;
+    CSGPrim*  addPrim(int num_node, int meshIdx=-1, int nodeOffset_=-1 ) ;
     CSGNode*  addNode(CSGNode nd, const std::vector<float4>* pl=nullptr );
     CSGNode*  addNodes(const std::vector<CSGNode>& nds );
     float4*   addPlan(const float4& pl );

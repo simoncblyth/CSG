@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <vector>
+#include <algorithm>
 #include <cstring>
 
 #include <glm/glm.hpp>
@@ -384,11 +386,25 @@ indicating the terminator forcing exact entire match of what is prior to the '$'
 void CSGFoundry::findSolidIdx(std::vector<unsigned>& solid_idx, const char* label) const 
 {
     if( label == nullptr ) return ; 
-    for(unsigned i=0 ; i < solid.size() ; i++)
+
+    std::vector<unsigned>& ss = solid_idx ; 
+
+    std::vector<std::string> elem ; 
+    SStr::Split(label, ',', elem ); 
+
+    for(unsigned i=0 ; i < elem.size() ; i++)
     {
-        const CSGSolid& so = solid[i]; 
-        if(SStr::SimpleMatch(so.label, label)) solid_idx.push_back(i) ; 
+        const std::string& ele = elem[i] ; 
+        for(unsigned j=0 ; j < solid.size() ; j++)
+        {
+            const CSGSolid& so = solid[j]; 
+
+            bool match = SStr::SimpleMatch(so.label, ele.c_str()) ;
+            unsigned count = std::count(ss.begin(), ss.end(), j ); 
+            if(match && count == 0) ss.push_back(j) ; 
+        }
     }
+
 }
 
 
@@ -750,14 +766,24 @@ persisted into the CSGPrim.
 Thus must addPrim prior to adding any node, 
 tran or plan needed for that prim.
 
+The nodeOffset_ argument default of -1 signifies
+to set the nodeOffset of the Prim to the count of
+preexisting Prim.  This is appropriate when are 
+adding new nodes.  
+
+When reusing preexisting nodes, provide a nodeOffset_ argument > -1 
+
 **/
 
-CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx)  
+CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx, int nodeOffset_ )  
 {
     CSGPrim pr = {} ;
     pr.setNumNode(num_node) ; 
-    pr.setNodeOffset(node.size()); 
-    pr.setTranOffset(tran.size()); 
+
+    int nodeOffset = nodeOffset_ < 0 ? int(node.size()) : nodeOffset_ ; 
+    pr.setNodeOffset(nodeOffset); 
+
+    pr.setTranOffset(tran.size());  // HMM are these used ?
     pr.setPlanOffset(plan.size()); 
 
     pr.setSbtIndexOffset(0) ;  // ?  THIS NEEDS TO BE OVERRIDDEN BY CALLER
@@ -766,6 +792,7 @@ CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx)
     unsigned primIdx = prim.size(); 
     assert( primIdx < IMAX ); 
     prim.push_back(pr); 
+
     return prim.data() + primIdx ; 
 }
 
