@@ -163,6 +163,12 @@ bool CSGNode::is_leaf() const
 }
 
 
+
+
+
+
+
+
 void CSGNode::setAABBLocal()
 {
     unsigned tc = typecode(); 
@@ -224,10 +230,17 @@ void CSGNode::setAABBLocal()
     {
         setAABB( 0.f );  
     }
-    else
+    else if( tc == CSG_ZERO )
     {
         setAABB( UNBOUNDED_DEFAULT_EXTENT ); 
     }
+    else
+    {
+        LOG(fatal) << " not implemented for tc " << tc ; 
+        assert(0); 
+        setAABB( 0.f );  
+    }
+
 }
 
 CSGNode CSGNode::Sphere(float radius)  // static
@@ -332,14 +345,14 @@ CSGNode CSGNode::Slab(float nx, float ny, float nz, float d1, float d2 )
 
 
 /**
-CSGNode::Make
-------------
+CSGNode::MakeDemo
+-------------------
 
 Only the first four chars of the name are used to select the type of node.
 
 **/
 
-CSGNode CSGNode::Make(const char* name) // static
+CSGNode CSGNode::MakeDemo(const char* name) // static
 {
     if(strncmp(name, "sphe", 4) == 0) return CSGNode::Sphere(100.f) ; 
     if(strncmp(name, "zsph", 4) == 0) return CSGNode::ZSphere(100.f, -50.f, 50.f) ; 

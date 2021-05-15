@@ -139,9 +139,8 @@ struct CSGFoundry
     CSGSolid* addDeepCopySolid(unsigned solidIdx, const char* label);
 
 
-
-
     template<typename T> unsigned addTran( const Tran<T>& tr  );
+    unsigned addTran( const qat4& tr, const qat4& it ) ;
 
     CSGSolid* make(const char* name); 
     CSGSolid* makeLayered( const char* label, float outer_radius, unsigned layers ) ;

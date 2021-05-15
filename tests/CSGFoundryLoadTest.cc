@@ -65,7 +65,7 @@ int test_getGlobalCenterExtent(const CSGFoundry& fd,  float4& gce, int midx, int
     assert( gas_idx == gas_idx2 ); 
 
     CSGPrim gpr = {} ; 
-    CSGPrim::copy(gpr, lpr); 
+    CSGPrim::Copy(gpr, lpr); 
     q.transform_aabb_inplace( gpr.AABB_() ); 
 
     LOG(info) 

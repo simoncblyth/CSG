@@ -185,6 +185,14 @@ struct CSGNode
     bool is_leaf() const ; 
     bool is_zero() const ; 
 
+    static void Copy(CSGNode& b, const CSGNode& a)
+    {
+        b.q0.f.x = a.q0.f.x ; b.q0.f.y = a.q0.f.y ; b.q0.f.z = a.q0.f.z ; b.q0.f.w = a.q0.f.w ; 
+        b.q1.f.x = a.q1.f.x ; b.q1.f.y = a.q1.f.y ; b.q1.f.z = a.q1.f.z ; b.q1.f.w = a.q1.f.w ; 
+        b.q2.f.x = a.q2.f.x ; b.q2.f.y = a.q2.f.y ; b.q2.f.z = a.q2.f.z ; b.q2.f.w = a.q2.f.w ; 
+        b.q3.f.x = a.q3.f.x ; b.q3.f.y = a.q3.f.y ; b.q3.f.z = a.q3.f.z ; b.q3.f.w = a.q3.f.w ; 
+    }
+
     static const float UNBOUNDED_DEFAULT_EXTENT ; 
 
     static CSGNode Union(); 
@@ -203,7 +211,7 @@ struct CSGNode
     static CSGNode Cylinder(float px, float py, float radius, float z1, float z2) ;
     static CSGNode Disc(float px, float py, float ir, float r, float z1, float z2);
 
-    static CSGNode Make(const char* name); 
+    static CSGNode MakeDemo(const char* name); 
     static CSGNode Make(unsigned typecode, const float* param6, const float* aabb); 
 
 #endif

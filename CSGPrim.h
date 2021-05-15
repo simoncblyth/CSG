@@ -57,19 +57,28 @@ struct CSGPrim
     quad q2 ; 
     quad q3 ; 
 
+    // ----  numNode and nodeOffset are fundamental to the meaning of CSGPrim
+
     PRIM_METHOD int  numNode() const    { return q0.i.x ; } 
     PRIM_METHOD int  nodeOffset() const { return q0.i.y ; } 
-    PRIM_METHOD int  tranOffset() const { return q0.i.z ; }
-    PRIM_METHOD int  planOffset() const { return q0.i.w ; }
-
     PRIM_METHOD void setNumNode(   int numNode){    q0.i.x = numNode ; }
     PRIM_METHOD void setNodeOffset(int nodeOffset){ q0.i.y = nodeOffset ; }
-    PRIM_METHOD void setTranOffset(int tranOffset){ q0.i.z = tranOffset ; }
-    PRIM_METHOD void setPlanOffset(int planOffset){ q0.i.w = planOffset ; }
+
+    // --------- sbtIndex offset is essential for OptiX 7 SBT PrimSpec machiney, but otherwise not relevant to the geometrical meaning  
 
     PRIM_METHOD unsigned  sbtIndexOffset()    const { return  q1.u.x ; }
     PRIM_METHOD void   setSbtIndexOffset(unsigned sbtIndexOffset){  q1.u.x = sbtIndexOffset ; }
     PRIM_METHOD const unsigned* sbtIndexOffsetPtr() const { return &q1.u.x ; }
+
+    // ---------- ARE tran/plan-offset now just metadata, due to absolute referencing ? 
+
+    PRIM_METHOD int  tranOffset() const { return q0.i.z ; } 
+    PRIM_METHOD int  planOffset() const { return q0.i.w ; }
+
+    PRIM_METHOD void setTranOffset(int tranOffset){ q0.i.z = tranOffset ; }
+    PRIM_METHOD void setPlanOffset(int planOffset){ q0.i.w = planOffset ; }
+
+    // -------- mesh/repeat/primIdx are metadata for debugging convenience 
 
     PRIM_METHOD unsigned  meshIdx() const {           return q1.u.y ; }  // aka lvIdx
     PRIM_METHOD void   setMeshIdx(unsigned midx){     q1.u.y = midx ; }
@@ -80,6 +89,7 @@ struct CSGPrim
     PRIM_METHOD unsigned primIdx() const {            return q1.u.w ; }  
     PRIM_METHOD void   setPrimIdx(unsigned pidx){     q1.u.w = pidx ; }
 
+    // ----------  AABB and ce needs changing when transform are applied to the nodes
 
     PRIM_METHOD void setAABB(  float e  ){                                                   q2.f.x = -e     ; q2.f.y = -e   ; q2.f.z = -e   ; q2.f.w =  e   ; q3.f.x =  e   ; q3.f.y =  e ; }  
     PRIM_METHOD void setAABB(  float x0, float  y0, float z0, float x1, float y1, float z1){      q2.f.x = x0    ; q2.f.y = y0   ; q2.f.z = z0   ; q2.f.w = x1   ; q3.f.x = y1   ; q3.f.y = z1 ; }  
@@ -105,7 +115,7 @@ struct CSGPrim
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
-    static void copy(CSGPrim& b, const CSGPrim& a)
+    static void Copy(CSGPrim& b, const CSGPrim& a)
     {
         b.q0.f.x = a.q0.f.x ; b.q0.f.y = a.q0.f.y ; b.q0.f.z = a.q0.f.z ; b.q0.f.w = a.q0.f.w ; 
         b.q1.f.x = a.q1.f.x ; b.q1.f.y = a.q1.f.y ; b.q1.f.z = a.q1.f.z ; b.q1.f.w = a.q1.f.w ; 

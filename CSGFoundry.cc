@@ -720,29 +720,24 @@ float4* CSGFoundry::addPlan(const float4& pl )
 template<typename T>
 unsigned CSGFoundry::addTran( const Tran<T>& tr  )
 {
+    //LOG(info) << tr.brief() ; 
     qat4 t(glm::value_ptr(tr.t));  // narrowing when T=double
     qat4 v(glm::value_ptr(tr.v)); 
-
-    unsigned idx = tran.size();   // size before push_back 
-    bool dump = false ; 
-    if(dump)
-    {
-        LOG(info) 
-            << " idx " << idx 
-            << " tr " << tr.brief()
-            ; 
-    }
-
-    assert( tran.size() == itra.size()) ; 
-    tran.push_back(t); 
-    itra.push_back(v); 
-    return idx ;  
+    return addTran(t, v); 
 }
-
 
 template unsigned CSGFoundry::addTran<float>(const Tran<float>& ) ;
 template unsigned CSGFoundry::addTran<double>(const Tran<double>& ) ;
 
+
+unsigned CSGFoundry::addTran( const qat4& tr, const qat4& it )
+{
+    unsigned idx = tran.size();   // size before push_back 
+    assert( tran.size() == itra.size()) ; 
+    tran.push_back(tr); 
+    itra.push_back(it); 
+    return idx ;  
+}
 
 CSGNode* CSGFoundry::addNodes(const std::vector<CSGNode>& nds )
 {
@@ -873,15 +868,13 @@ CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffs
     return solid.data() + idx  ; 
 }
 
-
-
-
 CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
 {
     const CSGSolid* oso = getSolid(solidIdx); 
 
     unsigned numPrim = oso->numPrim ; 
 
+    AABB sbb = {} ; 
     CSGSolid* cso = addSolid(numPrim, label); 
     cso->type = oso->type ; 
 
@@ -889,23 +882,58 @@ CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
     {
         const CSGPrim* opr = prim.data() + primIdx ; 
 
+        unsigned numNode = opr->numNode()  ; 
+        int nodeOffset_ = -1 ; // as deep copying, -1 declares that will immediately add numNode new nodes
+
+        AABB pbb = {} ; 
+        CSGPrim* cpr = addPrim(numNode, nodeOffset_ );
+
+        cpr->setMeshIdx(opr->meshIdx());    // copy the metadata that makes sense to be copied 
+        cpr->setRepeatIdx(opr->repeatIdx()); 
+        cpr->setPrimIdx(opr->primIdx()); 
+        // NB Prim has no transform
+
         for(unsigned nodeIdx=opr->nodeOffset() ; nodeIdx < opr->nodeOffset()+opr->numNode() ; nodeIdx++)
         {
-            const CSGNode* nd = node.data() + nodeIdx ; 
+            const CSGNode* ond = node.data() + nodeIdx ; 
+            unsigned o_trIdx = ond->gtransformIdx(); 
+
+            CSGNode cnd = {} ; 
+            CSGNode::Copy(cnd, *ond );   // straight copy reusing the transform reference  
 
 
+            const qat4* tra = nullptr ; 
+            const qat4* itr = nullptr ; 
+            unsigned c_trIdx = 0u ; 
+ 
+            if( o_trIdx > 0 )
+            {
+                tra = getTran(o_trIdx-1u) ; 
+                itr = getItra(o_trIdx-1u) ; 
+                c_trIdx = addTran(*tra, *itr);  // add fresh transforms, as this is deep copy  
+                cnd.setTransform(c_trIdx); 
+            }
 
-        }
-    } 
+            // TODO: will probably want to always add transforms as the point of making 
+            // deep copies is to allow making experimental changes to the copies 
+            // eg for applying progressive shrink scaling to check whether problems are caused 
+            // by bbox being too close to each other
 
+            cnd.setAABBLocal() ;  // reset to local with no transform applied
+            if(tra)  
+            {
+                tra->transform_aabb_inplace( cnd.AABB() ); 
+            }
+            pbb.include_aabb( cnd.AABB() ); 
+            addNode(cnd);       
+        }                  // over nodes of the Prim 
 
+        sbb.include_aabb(pbb.data()) ; 
+    }    // over Prim of the Solid
+
+    cso->center_extent = sbb.center_extent() ;  
     return cso ; 
 }
-
-
-
-
-
 
 
 /**
@@ -944,27 +972,27 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
     {
         unsigned numNode = 1 ; 
         int nodeOffset_ = -1 ; 
-        CSGPrim* p = addPrim(numNode, nodeOffset_ );
+        CSGPrim* pr = addPrim(numNode, nodeOffset_ );
  
         float radius = radii[i]; 
 
-        CSGNode* n = nullptr ; 
+        CSGNode* nd = nullptr ; 
 
         if(strcmp(label, "sphere") == 0)
         {
-            n = addNode(CSGNode::Sphere(radius)); 
+            nd = addNode(CSGNode::Sphere(radius)); 
         }
         else if(strcmp(label, "zsphere") == 0)
         {
-            n = addNode(CSGNode::ZSphere(radius, -radius/2.f , radius/2.f )); 
+            nd = addNode(CSGNode::ZSphere(radius, -radius/2.f , radius/2.f )); 
         }
         else
         {
             assert( 0 && "layered only implemented for sphere and zsphere currently" ); 
         } 
 
-        p->setSbtIndexOffset(i) ;  // huh: Looks to assumme the layered shape is the only geometry ?
-        p->setAABB( n->AABB() ); 
+        pr->setSbtIndexOffset(i) ;  // huh: Looks to assumme the layered shape is the only geometry ?
+        pr->setAABB( nd->AABB() ); 
     }
     return so ; 
 }
@@ -983,23 +1011,24 @@ CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned 
     {
         unsigned numNode = 1 ; 
         int nodeOffset_ = -1; 
-        CSGPrim* prim = addPrim(numNode, nodeOffset_); 
-        CSGNode* node = addNode(CSGNode::Make(label)) ;
+        CSGPrim* pr = addPrim(numNode, nodeOffset_); 
+        CSGNode* nd = addNode(CSGNode::MakeDemo(label)) ;
     
         float scale = scales[i]; 
 
         const Tran<double>* tran_scale = Tran<double>::make_scale( double(scale), double(scale), double(scale) ); 
         unsigned transform_idx = 1 + addTran(*tran_scale);      // 1-based idx, 0 meaning None
 
-        node->setTransform(transform_idx); 
+        nd->setTransform(transform_idx); 
+
         const qat4* tr = getTran(transform_idx-1u) ; 
 
-        tr->transform_aabb_inplace( node->AABB() ); 
+        tr->transform_aabb_inplace( nd->AABB() ); 
 
-        bb.include_aabb( node->AABB() ); 
+        bb.include_aabb( nd->AABB() ); 
 
-        prim->setSbtIndexOffset(i) ;  //  assuming no other GAS
-        prim->setAABB( node->AABB() ); 
+        pr->setSbtIndexOffset(i) ;  //  assuming no other GAS
+        pr->setAABB( nd->AABB() ); 
     }
 
     so->center_extent = bb.center_extent() ;  
@@ -1040,7 +1069,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, 
         unsigned numNode = 1 ; 
         int nodeOffset_ = -1 ;  // -1:use current node count as about to add the declared numNode
         CSGPrim* p = addPrim(numNode, nodeOffset_); 
-        CSGNode* n = addNode(CSGNode::Make(label)) ;
+        CSGNode* n = addNode(CSGNode::MakeDemo(label)) ;
     
         const Tran<double>* translate = Tran<double>::make_translate( double(i)*unit, double(j)*unit, double(k)*unit ); 
         unsigned transform_idx = 1 + addTran(*translate);      // 1-based idx, 0 meaning None
