@@ -76,6 +76,7 @@ struct CSGFoundry
     void dumpNode(unsigned solidIdx ) const ;
     std::string descNode() const ;
     std::string descNode(unsigned solidIdx) const  ;
+    std::string descTran(unsigned solidIdx) const  ; 
 
 
     AABB iasBB(unsigned ias_idx_, unsigned long long emm=0ull ) const ;
@@ -136,11 +137,11 @@ struct CSGFoundry
 
 
 
-    CSGSolid* addDeepCopySolid(unsigned solidIdx, const char* label);
+    CSGSolid* addDeepCopySolid(unsigned solidIdx, const char* label=nullptr );
 
 
     template<typename T> unsigned addTran( const Tran<T>& tr  );
-    unsigned addTran( const qat4& tr, const qat4& it ) ;
+    unsigned addTran( const qat4* tr, const qat4* it ) ;
 
     CSGSolid* make(const char* name); 
     CSGSolid* makeLayered( const char* label, float outer_radius, unsigned layers ) ;

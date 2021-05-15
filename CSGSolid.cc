@@ -49,6 +49,8 @@ std::string CSGSolid::desc() const
     return s ; 
 }
 
+
+
 std::string CSGSolid::MakeLabel(char typ0, unsigned idx0 )
 {
     std::stringstream ss ; 

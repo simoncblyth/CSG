@@ -13,6 +13,7 @@
    #include <iostream>
    #include <iomanip>
    #include <vector>
+   #include <sstream>
    #include <algorithm>
 #endif 
 
@@ -280,6 +281,25 @@ struct qat4
     }
 
 
+    QAT4_METHOD float element(unsigned j, unsigned k) const
+    {
+        const float4& f = j == 0 ? q0.f : ( j == 1 ? q1.f : ( j == 2 ? q2.f : q3.f ) ) ;  
+        return   k == 0  ? f.x : ( k == 1 ? f.y : ( k == 2 ? f.z : f.w )) ; 
+    }
+
+    QAT4_METHOD std::string desc(char mat, unsigned wid=8, unsigned prec=3) const 
+    {
+        std::stringstream ss ; 
+        ss << mat << ":" ; 
+        for(int j=0 ; j < 4 ; j++ ) 
+        {
+            ss << "[" ;
+            for(int k=0 ; k < 4 ; k++ ) ss << std::setw(wid) << std::fixed << std::setprecision(prec) << element(j,k) << " " ; 
+            ss << "]" ; 
+        }
+        std::string s = ss.str() ; 
+        return s ; 
+    }
 
     static QAT4_METHOD void dump(const std::vector<qat4>& qv);
 
@@ -326,5 +346,10 @@ QAT4_FUNCTION void qat4::dump(const std::vector<qat4>& qv)
 
     }
 }
+
+
+
+
+
 #endif 
 

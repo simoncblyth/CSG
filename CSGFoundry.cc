@@ -105,17 +105,19 @@ void CSGFoundry::makeDemoGrid()
 
 std::string CSGFoundry::desc() const 
 {
-    unsigned num_solid_total = getNumSolidTotal(); 
-    unsigned num_solid_standard = getNumSolid(STANDARD_SOLID); 
-    unsigned num_solid_oneprim  = getNumSolid(ONE_PRIM_SOLID); 
-    unsigned num_solid_onenode  = getNumSolid(ONE_NODE_SOLID); 
+    unsigned num_total = getNumSolidTotal(); 
+    unsigned num_standard = getNumSolid(STANDARD_SOLID); 
+    unsigned num_oneprim  = getNumSolid(ONE_PRIM_SOLID); 
+    unsigned num_onenode  = getNumSolid(ONE_NODE_SOLID); 
+    unsigned num_deepcopy = getNumSolid(DEEP_COPY_SOLID); 
 
     std::stringstream ss ; 
     ss << "CSGFoundry "
-       << " num_solid_total " << num_solid_total
-       << " num_solid_standard " << num_solid_standard
-       << " num_solid_oneprim " << num_solid_oneprim
-       << " num_solid_onenode " << num_solid_onenode
+       << " total solids " << num_total
+       << " STANDARD " << num_standard
+       << " ONE_PRIM " << num_oneprim
+       << " ONE_NODE " << num_onenode
+       << " DEEP_COPY " << num_deepcopy
        << " num_prim " << prim.size()
        << " num_node " << node.size()
        << " num_plan " << plan.size()
@@ -411,7 +413,7 @@ void CSGFoundry::findSolidIdx(std::vector<unsigned>& solid_idx, const char* labe
 void CSGFoundry::dumpPrim() const 
 {
     std::string s = descPrim(); 
-    LOG(info) << std::endl << s ;
+    LOG(info) << s ;
 }
 
 std::string CSGFoundry::descPrim() const 
@@ -425,18 +427,18 @@ std::string CSGFoundry::descPrim() const
 std::string CSGFoundry::descPrim(unsigned solidIdx) const 
 {
     const CSGSolid* so = getSolid(solidIdx); 
+    assert(so); 
+
     std::stringstream ss ; 
-    ss << ( so ? so->desc() : "NULL" ) ;  
-    if(so)
+    ss << std::endl << so->desc() << std::endl ;  
+
+    for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)  
     {
-       if(so->numPrim > 1 ) ss << std::endl ;  
-        for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)  
-        {
-            const CSGPrim* pr = getPrim(primIdx) ;  // note absolute primIdx
-            assert(pr) ; 
-            ss << " primIdx " << std::setw(3) << primIdx << " " << pr->desc() << std::endl ; 
-        } 
-    }
+        const CSGPrim* pr = getPrim(primIdx) ;  // note absolute primIdx
+        assert(pr) ; 
+        ss << "    primIdx " << std::setw(5) << primIdx << " : " << pr->desc() << std::endl ; 
+    } 
+
     std::string s = ss.str(); 
     return s ; 
 }
@@ -488,27 +490,51 @@ std::string CSGFoundry::descNode() const
 std::string CSGFoundry::descNode(unsigned solidIdx) const 
 {
     const CSGSolid* so = solid.data() + solidIdx ; 
-
     const CSGPrim* pr0 = prim.data() + so->primOffset ; 
     const CSGNode* nd0 = node.data() + pr0->nodeOffset() ;  
 
     std::stringstream ss ;
-    ss << so->desc() ;
-    if( so->numPrim > 1 || pr0->numNode() > 1) ss << std::endl ; 
+    ss << std::endl << so->desc() << std::endl  ;
 
     for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
     {
         const CSGPrim* pr = prim.data() + primIdx ; 
-
         int numNode = pr->numNode() ; 
         for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+numNode ; nodeIdx++)
         {
             const CSGNode* nd = node.data() + nodeIdx ; 
-            ss << nd->desc() ; 
-            if( numNode > 1 ) ss << std::endl ; 
+            ss << "    nodeIdx " << std::setw(5) << nodeIdx << " : " << nd->desc() << std::endl ; 
         }
     } 
 
+    std::string s = ss.str(); 
+    return s ; 
+}
+
+std::string CSGFoundry::descTran(unsigned solidIdx) const 
+{
+    const CSGSolid* so = solid.data() + solidIdx ; 
+    const CSGPrim* pr0 = prim.data() + so->primOffset ; 
+    const CSGNode* nd0 = node.data() + pr0->nodeOffset() ;  
+
+    std::stringstream ss ;
+    ss << std::endl << so->desc() << std::endl  ;
+
+    for(unsigned primIdx=so->primOffset ; primIdx < so->primOffset+so->numPrim ; primIdx++)
+    {
+        const CSGPrim* pr = prim.data() + primIdx ; 
+        int numNode = pr->numNode() ; 
+        for(unsigned nodeIdx=pr->nodeOffset() ; nodeIdx < pr->nodeOffset()+numNode ; nodeIdx++)
+        {
+            const CSGNode* nd = node.data() + nodeIdx ; 
+            unsigned tranIdx = nd->gtransformIdx(); 
+            
+            const qat4* tr = tranIdx > 0 ? getTran(tranIdx-1) : nullptr ;  
+            const qat4* it = tranIdx > 0 ? getItra(tranIdx-1) : nullptr ;  
+            ss << "    tranIdx " << std::setw(5) << tranIdx << " : " << ( tr ? tr->desc('t') : "" ) << std::endl ; 
+            ss << "    tranIdx " << std::setw(5) << tranIdx << " : " << ( it ? it->desc('i') : "" ) << std::endl ; 
+        }
+    } 
     std::string s = ss.str(); 
     return s ; 
 }
@@ -723,19 +749,21 @@ unsigned CSGFoundry::addTran( const Tran<T>& tr  )
     //LOG(info) << tr.brief() ; 
     qat4 t(glm::value_ptr(tr.t));  // narrowing when T=double
     qat4 v(glm::value_ptr(tr.v)); 
-    return addTran(t, v); 
+    unsigned idx = addTran(&t, &v); 
+    return idx ; 
 }
 
 template unsigned CSGFoundry::addTran<float>(const Tran<float>& ) ;
 template unsigned CSGFoundry::addTran<double>(const Tran<double>& ) ;
 
 
-unsigned CSGFoundry::addTran( const qat4& tr, const qat4& it )
+unsigned CSGFoundry::addTran( const qat4* tr, const qat4* it )
 {
     unsigned idx = tran.size();   // size before push_back 
     assert( tran.size() == itra.size()) ; 
-    tran.push_back(tr); 
-    itra.push_back(it); 
+    tran.push_back(*tr); 
+    itra.push_back(*it); 
+    std::cout << "CSGFoundry::addTran  idx " << idx << std::endl ; 
     return idx ;  
 }
 
@@ -772,23 +800,23 @@ When reusing preexisting nodes, provide a nodeOffset_ argument > -1
 
 CSGPrim* CSGFoundry::addPrim(int num_node, int nodeOffset_ )  
 {
-    CSGPrim pr = {} ;
-    pr.setNumNode(num_node) ; 
-
+    unsigned globalPrimIdx = prim.size(); 
     int nodeOffset = nodeOffset_ < 0 ? int(node.size()) : nodeOffset_ ; 
-    pr.setNodeOffset(nodeOffset); 
 
-    pr.setTranOffset(tran.size());  // HMM are these used ?
+    CSGPrim pr = {} ;
+
+    pr.setNumNode(num_node) ; 
+    pr.setNodeOffset(nodeOffset); 
+    pr.setSbtIndexOffset(globalPrimIdx) ; 
+    pr.setMeshIdx(-1) ;                // metadata, that may be set by caller 
+
+    pr.setTranOffset(tran.size());     // HMM are tranOffset and planOffset used now that use global referencing  ?
     pr.setPlanOffset(plan.size()); 
 
-    pr.setSbtIndexOffset(0) ;  // THIS MUST BE OVERRIDDEN BY CALLER
-    pr.setMeshIdx(-1) ;        // metadata, that may be set by caller 
-
-    unsigned primIdx = prim.size(); 
-    assert( primIdx < IMAX ); 
+    assert( globalPrimIdx < IMAX ); 
     prim.push_back(pr); 
 
-    return prim.data() + primIdx ; 
+    return prim.data() + globalPrimIdx ; 
 }
 
 
@@ -868,15 +896,32 @@ CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffs
     return solid.data() + idx  ; 
 }
 
+
+
+/**
+CSGFoundry::addDeepCopySolid
+-------------------------------
+
+TODO: will probably want to always add transforms as the point of making 
+deep copies is to allow making experimental changes to the copies 
+eg for applying progressive shrink scaling to check whether problems are caused 
+by bbox being too close to each other
+ 
+**/
 CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
 {
+    std::string cso_label = label ? label : CSGSolid::MakeLabel('d', solidIdx) ; 
+
+    LOG(info) << " cso_label " << cso_label ; 
+    std::cout << " cso_label " << cso_label << std::endl ; 
+
     const CSGSolid* oso = getSolid(solidIdx); 
 
     unsigned numPrim = oso->numPrim ; 
 
     AABB sbb = {} ; 
-    CSGSolid* cso = addSolid(numPrim, label); 
-    cso->type = oso->type ; 
+    CSGSolid* cso = addSolid(numPrim, cso_label.c_str()); 
+    cso->type = DEEP_COPY_SOLID ; 
 
     for(unsigned primIdx=oso->primOffset ; primIdx < oso->primOffset+oso->numPrim ; primIdx++)
     {
@@ -891,33 +936,54 @@ CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
         cpr->setMeshIdx(opr->meshIdx());    // copy the metadata that makes sense to be copied 
         cpr->setRepeatIdx(opr->repeatIdx()); 
         cpr->setPrimIdx(opr->primIdx()); 
-        // NB Prim has no transform
 
         for(unsigned nodeIdx=opr->nodeOffset() ; nodeIdx < opr->nodeOffset()+opr->numNode() ; nodeIdx++)
         {
             const CSGNode* ond = node.data() + nodeIdx ; 
-            unsigned o_trIdx = ond->gtransformIdx(); 
+            unsigned o_tranIdx = ond->gtransformIdx(); 
 
             CSGNode cnd = {} ; 
             CSGNode::Copy(cnd, *ond );   // straight copy reusing the transform reference  
 
-
             const qat4* tra = nullptr ; 
             const qat4* itr = nullptr ; 
-            unsigned c_trIdx = 0u ; 
+            unsigned c_tranIdx = 0u ; 
  
-            if( o_trIdx > 0 )
+            if( o_tranIdx > 0 )
             {
-                tra = getTran(o_trIdx-1u) ; 
-                itr = getItra(o_trIdx-1u) ; 
-                c_trIdx = addTran(*tra, *itr);  // add fresh transforms, as this is deep copy  
-                cnd.setTransform(c_trIdx); 
+                tra = getTran(o_tranIdx-1u) ; 
+                itr = getItra(o_tranIdx-1u) ; 
+
+                std::cout << " o_tranIdx " << o_tranIdx << std::endl ; 
+                std::cout << " tra  " << tra->desc('t') << std::endl ; 
+                std::cout << " itr  " << itr->desc('i') << std::endl ; 
+
+                c_tranIdx = 1 + addTran(tra, itr);  // add fresh transforms, as this is deep copy  
+
+                const qat4* tra2 = getTran(c_tranIdx-1u) ; 
+                const qat4* itr2 = getItra(c_tranIdx-1u) ; 
+
+                std::cout << " c_tranIdx " << c_tranIdx << std::endl ; 
+                std::cout << " tra2 " << tra2->desc('t') << std::endl ; 
+                std::cout << " itr2 " << itr2->desc('i') << std::endl ; 
             }
 
-            // TODO: will probably want to always add transforms as the point of making 
-            // deep copies is to allow making experimental changes to the copies 
-            // eg for applying progressive shrink scaling to check whether problems are caused 
-            // by bbox being too close to each other
+
+            // TODO: fix this in CSGNode 
+            bool c0 = cnd.complement(); 
+            cnd.zeroTransformComplement(); 
+            cnd.setComplement(c0) ; 
+            cnd.setTransform( c_tranIdx );   
+
+            unsigned c_tranIdx2 = cnd.gtransformIdx() ; 
+
+            bool match = c_tranIdx2 == c_tranIdx ;  
+            if(!match)
+            {
+                std::cout << "set/get transform fail c_tranIdx " << c_tranIdx << " c_tranIdx2 " << c_tranIdx2 << std::endl ; 
+            }
+            assert(match); 
+
 
             cnd.setAABBLocal() ;  // reset to local with no transform applied
             if(tra)  
@@ -927,7 +993,8 @@ CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
             pbb.include_aabb( cnd.AABB() ); 
             addNode(cnd);       
         }                  // over nodes of the Prim 
-
+         
+        cpr->setAABB(pbb.data()); 
         sbb.include_aabb(pbb.data()) ; 
     }    // over Prim of the Solid
 
@@ -991,7 +1058,7 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
             assert( 0 && "layered only implemented for sphere and zsphere currently" ); 
         } 
 
-        pr->setSbtIndexOffset(i) ;  // huh: Looks to assumme the layered shape is the only geometry ?
+        // pr->setSbtIndexOffset(i) ;  // NOW done in addPrim
         pr->setAABB( nd->AABB() ); 
     }
     return so ; 
@@ -1027,7 +1094,7 @@ CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned 
 
         bb.include_aabb( nd->AABB() ); 
 
-        pr->setSbtIndexOffset(i) ;  //  assuming no other GAS
+        // pr->setSbtIndexOffset(i) ;  //  NOW done in addPrim
         pr->setAABB( nd->AABB() ); 
     }
 
@@ -1080,7 +1147,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, 
 
         bb.include_aabb( n->AABB() ); 
 
-        p->setSbtIndexOffset(idx) ;    // HMM: assuming this is the only geometry ? does this need to be absolute ? 
+        // p->setSbtIndexOffset(idx) ;    //  now done in addPrim
         p->setAABB( n->AABB() );  // HUH : THIS SHOULD BE bb ?
 
         //DumpAABB("p->AABB() aft setup", p->AABB() ); 
@@ -1108,7 +1175,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, 
         n->setTransform(transform_idx); 
         t->transform_aabb_inplace( n->AABB() ); 
 
-        p->setSbtIndexOffset(idx); 
+        // p->setSbtIndexOffset(idx);   now done in addPrim
         p->setAABB( n->AABB() );
         
         idx += 1 ; 
@@ -1472,6 +1539,7 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
         unsigned ni = a->shape[0] ; 
         unsigned nj = a->shape[1] ; 
         unsigned nk = a->shape[2] ; 
+        std::cout  << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name << std::endl ; 
 
         //LOG(LEVEL) << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name ; 
 

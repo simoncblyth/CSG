@@ -46,12 +46,14 @@ std::string CSGNode::Desc(const float* fval, int numval, int wid, int prec ) // 
 std::string CSGNode::desc() const 
 {
     const float* aabb = AABB(); 
+    unsigned trIdx = gtransformIdx(); 
     std::stringstream ss ; 
     ss
         << "CSGNode "
         << std::setw(5) << index() 
         << " " << CSG::Tag((OpticksCSG_t)typecode())
-        << " aabb: " << Desc( aabb, 6, 7, 1 ) ;
+        << " aabb: " << Desc( aabb, 6, 7, 1 ) 
+        << " trIdx: " << trIdx 
         ;    
 
     std::string s = ss.str(); 

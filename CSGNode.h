@@ -160,8 +160,11 @@ struct CSGNode
     NODE_METHOD unsigned typecode()  const {      return q3.u.z ; }  //  OptickCSG_t enum 
     NODE_METHOD void setTypecode(unsigned tc){           q3.u.z = tc ; }
 
+    NODE_METHOD void zeroTransformComplement(){         q3.u.w = 0 ; }  
     NODE_METHOD void setTransform(  unsigned idx ){     q3.u.w |= (idx & 0x7fffffff) ; }
     NODE_METHOD void setComplement( bool complement ){  q3.u.w |= ( (int(complement) << 31) & 0x80000000) ; }
+
+
 
     NODE_METHOD unsigned gtransformIdx() const { return q3.u.w & 0x7fffffff ; }  //  gtransformIdx is 1-based, 0 meaning None 
     NODE_METHOD bool        complement() const { return q3.u.w & 0x80000000 ; } 

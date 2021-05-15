@@ -131,8 +131,9 @@ void test_findSolidIdx(const CSGFoundry* fd, int argc, char** argv)
          for(int j=0 ; j < int(solid_selection.size()) ; j++)
          {
              unsigned solidIdx = solid_selection[j]; 
-             //const CSGSolid* solid = fd->getSolid(solidIdx); 
              LOG(info) << fd->descPrim(solidIdx) ;  
+             LOG(info) << fd->descNode(solidIdx) ;  
+             LOG(info) << fd->descTran(solidIdx) ;  
          }
     }
 }
@@ -143,7 +144,7 @@ int main(int argc, char** argv)
 
     CSGFoundry* fd = CSGFoundry::Load(SSys::getenvvar("CFBASE", "$TMP/CSG_GGeo" ), "CSGFoundry"); 
     LOG(info) << "foundry " << fd->desc() ; 
-    //fd->summary(); 
+    fd->summary(); 
 
     //test_parseMOI(fd); 
     test_findSolidIdx(fd, argc, argv); 
