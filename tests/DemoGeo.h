@@ -1,20 +1,18 @@
 #pragma once
-#include <array>
-#include <vector>
 #include <string>
 
-struct CSGSolid ; 
-struct CSGPrim ; 
-struct CSGFoundry ; 
-
 /**
+DemoGeo
+=========
+
 DemoGeo is for high level definition of specific examples of geometry, 
-it is fine as a test of the CSG model but it definitely does not belong 
-in the model package.
+that provide tests of the CSG model and rendering thereof.
 **/
 
 struct DemoGeo
 {
+    CSGFoundry*  foundry ; 
+
     DemoGeo(CSGFoundry* foundry_);
 
     void init();
@@ -24,13 +22,10 @@ struct DemoGeo
     void init_clustered(const char* name);
     void init(const char* name);
 
-    std::string desc() const ;
-    void        setCenterExtent(const float4& center_extent); 
-    float4      getCenterExtent() const ; 
+    void addInstance(unsigned gas_idx) ;
 
-    float4       center_extent = {0.f, 0.f, 0.f, 100.f} ; 
-    CSGFoundry*  foundry ; 
-    const char*  top ;  
+    std::string desc() const ;
+
 };
 
 

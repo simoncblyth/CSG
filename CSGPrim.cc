@@ -19,8 +19,6 @@ std::string CSGPrim::desc() const
     std::stringstream ss ; 
     ss 
       << "CSGPrim"
-      << " mn " << mn() 
-      << " mx " << mx() 
       << " numNode/node/tran/plan" 
       << std::setw(4) << numNode() << " "  
       << std::setw(4) << nodeOffset() << " "
@@ -31,6 +29,8 @@ std::string CSGPrim::desc() const
       << std::setw(4) << meshIdx() << " "
       << std::setw(4) << repeatIdx() << " " 
       << std::setw(4) << primIdx()  
+      << " mn " << mn() 
+      << " mx " << mx() 
       ;
     std::string s = ss.str(); 
     return s ; 

@@ -126,6 +126,14 @@ void test_findSolidIdx(const CSGFoundry* fd, int argc, char** argv)
             << std::endl 
             << fd->descSolids(solid_selection) 
             ; 
+
+
+         for(int j=0 ; j < int(solid_selection.size()) ; j++)
+         {
+             unsigned solidIdx = solid_selection[j]; 
+             //const CSGSolid* solid = fd->getSolid(solidIdx); 
+             LOG(info) << fd->descPrim(solidIdx) ;  
+         }
     }
 }
 

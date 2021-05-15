@@ -1,6 +1,9 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <array>
+
+
 #include <vector_types.h>
 
 #include "SStr.hh"
@@ -15,12 +18,9 @@
 #include "DemoGeo.h"
 #include "DemoGrid.h"
 
-
-
 DemoGeo::DemoGeo(CSGFoundry* foundry_)
     :
-    foundry(foundry_),
-    top("i0")
+    foundry(foundry_)
 {
     init();
 }
@@ -32,10 +32,7 @@ void DemoGeo::init()
     const char* geometry = SSys::getenvvar("GEOMETRY", "parade" ); 
     int layers = SSys::getenvint("LAYERS", 1) ; 
 
-    LOG(info) 
-        << " geometry " << geometry
-        << " layers " << layers 
-        ;    
+    LOG(info) << " geometry " << geometry << " layers " << layers ;    
 
     if(strcmp(geometry, "sphere_containing_grid_of_spheres") == 0)
     {
@@ -61,12 +58,6 @@ void DemoGeo::init()
     {
         init(geometry); 
     }
-
-    const float4 ce  = getCenterExtent(); 
-    LOG(info) 
-        << " top_extent " << ce.w  
-        ; 
-
 
     LOG(info) << "]" ; 
 }
@@ -95,13 +86,9 @@ void DemoGeo::init_sphere_containing_grid_of_spheres(unsigned layers )
 
     foundry->makeLayered("sphere", 0.7f, layers ); 
     foundry->makeLayered("sphere", 1.0f, layers ); 
-    CSGSolid* so = foundry->makeLayered("sphere", big_radius, 1 ); 
-
-    top = strdup("i0") ; 
-
-    setCenterExtent(so->center_extent); 
-
+    foundry->makeLayered("sphere", big_radius, 1 ); 
 }
+
 
 void DemoGeo::init_parade()
 {
@@ -111,10 +98,7 @@ void DemoGeo::init_parade()
     unsigned num_solid = foundry->getNumSolid() ; 
 
     unsigned ias_idx = 0 ; 
-    const float4 ce = DemoGrid::AddInstances( foundry, ias_idx, num_solid ); 
-
-    top = strdup("i0") ; 
-    setCenterExtent(ce); 
+    DemoGrid::AddInstances( foundry, ias_idx, num_solid ); 
 
     LOG(info) << "]"  ; 
 }
@@ -146,26 +130,36 @@ void DemoGeo::init_clustered(const char* name)
     CSGSolid* so = foundry->makeClustered(name, cl[0],cl[1],cl[2],cl[3],cl[4],cl[5],cl[6],cl[7],cl[8], unit, inbox ); 
     std::cout << "DemoGeo::init_layered" << name << " so.center_extent " << so->center_extent << std::endl ; 
 
-    setCenterExtent(so->center_extent); 
-    top = strdup("g0") ; 
+    unsigned gas_idx = 0 ; 
+    addInstance(gas_idx);  
 }
 
 void DemoGeo::init_layered(const char* name, unsigned layers)
 {
     CSGSolid* so = foundry->makeLayered(name, 100.f, layers ); 
     LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
-    setCenterExtent(so->center_extent); 
-    top = strdup("g0") ; 
+
+    unsigned gas_idx = 0 ; 
+    addInstance(gas_idx);  
+}
+
+void DemoGeo::addInstance(unsigned gas_idx)
+{
+    unsigned ias_idx = 0 ; 
+    unsigned ins_idx = foundry->inst.size() ; // 0-based index within the DemoGrid
+    qat4 q  ; 
+    q.setIdentity( ins_idx, gas_idx, ias_idx ); 
+    foundry->inst.push_back( q ); 
 }
 
 void DemoGeo::init(const char* name)
 {
     CSGSolid* so = foundry->make(name) ; 
     LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
-    setCenterExtent(so->center_extent); 
-    top = strdup("g0") ; 
-}
 
+    unsigned gas_idx = 0 ; 
+    addInstance(gas_idx);  
+}
 
 std::string DemoGeo::desc() const
 {
@@ -174,11 +168,4 @@ std::string DemoGeo::desc() const
     std::string s = ss.str(); 
     return s ; 
 }
-
-void DemoGeo::setCenterExtent(const float4&  center_extent_){ center_extent = center_extent_ ;  }
-float4 DemoGeo::getCenterExtent() const  { return center_extent ;  }
-
-
-
-
 

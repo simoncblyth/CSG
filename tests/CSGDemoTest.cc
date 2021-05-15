@@ -16,8 +16,7 @@ int main(int argc, char** argv)
     LOG(info) << fd.desc(); 
     LOG(info) << fd.descSolids(); 
 
-
-    const char* cfbase = SSys::getenvvar("CFBASE", "$TMP/CSGDemoTest" );
+    const char* cfbase = SSys::getenvvar("CFBASE", "$TMP/CSGDemoTest/default" );
     const char* rel = "CSGFoundry" ; 
 
     fd.write(cfbase, rel );    // expects existing directory $CFBASE/CSGFoundry 

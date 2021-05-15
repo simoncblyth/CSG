@@ -1,10 +1,9 @@
 #!/bin/bash -l 
 
 bin=CSGDemoTest 
-export CFBASE=/tmp/$USER/opticks/CSGDemoTest
 
-geometry=parade
-#geometry=sphere_containing_grid_of_spheres
+#geometry=parade
+geometry=sphere_containing_grid_of_spheres
 #geometry=layered_sphere
 #geometry=layered_zsphere
 #geometry=clustered_sphere
@@ -27,6 +26,7 @@ geometry=parade
 
 #clusterspec=-3:4:1,-3:4:1,-3:4:1
 clusterspec=-1:2:1,-1:2:1,-1:2:1
+
 clusterunit=500
 
 gridmodulo=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
@@ -35,6 +35,7 @@ gridmodulo=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 #gridmodulo=5,6
 #gridmodulo=10
 #gridmodulo=2
+
 #gridsingle=2
 gridsingle=""
 
@@ -48,9 +49,9 @@ gridspec=-10:11:2,-10:11:2,0:6:3
 gridscale=200.0
 
 # number of concentric layers in compound shapes
-layers=1     
+#layers=1     
 #layers=2
-#layers=3
+layers=3
 #layers=20
 
 # make sensitive to calling environment
@@ -63,24 +64,17 @@ export GRIDSPEC=${GRIDSPEC:-$gridspec}
 export GRIDSCALE=${GRIDSCALE:-$gridscale}
 export LAYERS=${LAYERS:-$layers}
 
-
-fmt="%-20s : %s \n"
-printf "$fmt" GEOMETRY $GEOMETRY
-printf "$fmt" GRIDSPEC $GRIDSPEC
-printf "$fmt" GRIDMODULO $GRIDMODULO
-printf "$fmt" GRIDSINGLE $GRIDSINGLE
-printf "$fmt" GRIDSCALE $GRIDSCALE
-printf "$fmt" LAYERS $LAYERS
-
-
-
-
-cfdir=${CFBASE}/CSGFoundry
+export CFBASE=/tmp/$USER/opticks/CSGDemoTest/$GEOMETRY
+cfdir=$CFBASE/CSGFoundry
 mkdir -p $cfdir
+
+vars="bin GEOMETRY CLUSTERSPEC CLUSTERUNIT GRIDMODULO GRIDSINGLE GRIDSPEC GRIDSCALE LAYERS CFBASE cfdir"
+for var in $vars ; do printf "%-20s : %s \n" $var ${!var} ; done
 
 $bin $* 
 [ $? -ne 0 ] && exit 1 
 
+echo ls -l $cfdir/
 ls -l $cfdir/
 
 exit 0
