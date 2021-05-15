@@ -1,7 +1,8 @@
 #include <iostream>
 #include "Tran.h"
 
-int main()
+
+void test_make()
 {
     const Tran<float>* i = Tran<float>::make_translate( 0.f, 0.f, 0.f ) ; 
     const Tran<float>* t = Tran<float>::make_translate( 1.f, 2.f, 3.f ) ; 
@@ -17,6 +18,22 @@ int main()
     std::cout << "r   " << r->brief() << std::endl ; 
     std::cout << "ts0 " << ts0->brief() << std::endl ; 
     std::cout << "ts1 " << ts1->brief() << std::endl ; 
+}
 
+
+void test_ctor()
+{
+    const Tran<float>* s = Tran<float>::make_scale( 1.f, 2.f, 3.f ) ; 
+    const Tran<float>* s2 = new Tran<float>( s->tdata(), s->vdata() ) ; 
+
+    std::cout << "s    " << s->brief() << std::endl ; 
+    std::cout << "s2   " << s2->brief() << std::endl ; 
+}
+
+
+int main()
+{
+    //test_make(); 
+    test_ctor(); 
     return 0 ; 
 }

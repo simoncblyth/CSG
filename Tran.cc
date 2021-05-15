@@ -5,6 +5,9 @@
 #include "Tran.h"
 #include <glm/gtx/transform.hpp>
 
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 
 template<typename T>
@@ -105,6 +108,16 @@ const Tran<T>* Tran<T>::product(const std::vector<const Tran<T>*>& tt, bool reve
 
 
 
+
+template<typename T>
+Tran<T>::Tran( const T* transform, const T* inverse ) 
+    :   
+    t(glm::make_mat4x4<T>(transform)), 
+    v(glm::make_mat4x4<T>(inverse)),
+    i(t*v)
+{
+} 
+
 template<typename T>
 Tran<T>::Tran( const glm::tmat4x4<T>& transform, const glm::tmat4x4<T>& inverse ) 
     :   
@@ -113,6 +126,21 @@ Tran<T>::Tran( const glm::tmat4x4<T>& transform, const glm::tmat4x4<T>& inverse 
     i(transform*inverse)
 {
 } 
+
+
+template<typename T>
+const T*  Tran<T>::tdata() const 
+{
+    return glm::value_ptr(t) ; 
+}
+
+template<typename T>
+const T*  Tran<T>::vdata() const 
+{
+    return glm::value_ptr(v) ; 
+}
+
+ 
 
 
 template<typename T>
@@ -154,8 +182,6 @@ std::string Tran<T>::brief(bool only_tlate, char mat, unsigned wid, unsigned pre
     std::string s = ss.str() ; 
     return s ; 
 }
-
-
 
 
 

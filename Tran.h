@@ -32,11 +32,15 @@ struct Tran
     static const Tran<T>* product(const std::vector<const Tran<T>*>& tt, bool reverse );
 
 
+    Tran( const T* transform, const T* inverse ) ;
     Tran( const glm::tmat4x4<T>& transform, const glm::tmat4x4<T>& inverse ) ;
 
     bool is_identity(char mat='t', T epsilon=1e-6) const ; 
     std::string brief(bool only_tlate=false, char mat='t', unsigned wid=6, unsigned prec=1) const ;  
-   
+  
+    const T* tdata() const ; 
+    const T* vdata() const ; 
+ 
     glm::tmat4x4<T> t ;
     glm::tmat4x4<T> v ;
     glm::tmat4x4<T> i ;

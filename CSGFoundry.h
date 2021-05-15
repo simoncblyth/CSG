@@ -227,7 +227,7 @@ struct CSGFoundry
 
     CSGName*    id ; 
     CSGTarget*  target ; 
-
+    bool        deepcopy_everynode_transform ; 
 
 };
 

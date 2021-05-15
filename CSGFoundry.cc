@@ -34,7 +34,8 @@ CSGFoundry::CSGFoundry()
     d_plan(nullptr),
     d_itra(nullptr),
     id(new CSGName(this)),
-    target(new CSGTarget(this))
+    target(new CSGTarget(this)),
+    deepcopy_everynode_transform(true)
 {
     init(); 
 }
@@ -638,6 +639,10 @@ const qat4*      CSGFoundry::getItra(unsigned itraIdx)   const { return itraIdx 
 const qat4*      CSGFoundry::getInst(unsigned instIdx)   const { return instIdx  < inst.size()  ? inst.data()  + instIdx  : nullptr ; }
 
 
+
+
+
+
 const CSGSolid*  CSGFoundry::getSolid_(int solidIdx_) const { 
     unsigned solidIdx = solidIdx_ < 0 ? unsigned(solid.size() + solidIdx_) : unsigned(solidIdx_)  ;   // -ve counts from end
     return getSolid(solidIdx); 
@@ -763,7 +768,6 @@ unsigned CSGFoundry::addTran( const qat4* tr, const qat4* it )
     assert( tran.size() == itra.size()) ; 
     tran.push_back(*tr); 
     itra.push_back(*it); 
-    std::cout << "CSGFoundry::addTran  idx " << idx << std::endl ; 
     return idx ;  
 }
 
@@ -908,9 +912,10 @@ eg for applying progressive shrink scaling to check whether problems are caused
 by bbox being too close to each other
  
 **/
-CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
+CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label )
 {
     std::string cso_label = label ? label : CSGSolid::MakeLabel('d', solidIdx) ; 
+
 
     LOG(info) << " cso_label " << cso_label ; 
     std::cout << " cso_label " << cso_label << std::endl ; 
@@ -953,20 +958,25 @@ CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
             {
                 tra = getTran(o_tranIdx-1u) ; 
                 itr = getItra(o_tranIdx-1u) ; 
+            }
+            else if( deepcopy_everynode_transform )
+            {
+                tra = new qat4 ; 
+                itr = new qat4 ; 
+            }
 
-                std::cout << " o_tranIdx " << o_tranIdx << std::endl ; 
+            if( tra && itr )
+            {
+                c_tranIdx = 1 + addTran(tra, itr);  // add fresh transforms, as this is deep copy  
+                std::cout 
+                    << " o_tranIdx " << o_tranIdx 
+                    << " c_tranIdx " << c_tranIdx 
+                    << " deepcopy_everynode_transform " << deepcopy_everynode_transform
+                    << std::endl
+                    ; 
                 std::cout << " tra  " << tra->desc('t') << std::endl ; 
                 std::cout << " itr  " << itr->desc('i') << std::endl ; 
-
-                c_tranIdx = 1 + addTran(tra, itr);  // add fresh transforms, as this is deep copy  
-
-                const qat4* tra2 = getTran(c_tranIdx-1u) ; 
-                const qat4* itr2 = getItra(c_tranIdx-1u) ; 
-
-                std::cout << " c_tranIdx " << c_tranIdx << std::endl ; 
-                std::cout << " tra2 " << tra2->desc('t') << std::endl ; 
-                std::cout << " itr2 " << itr2->desc('i') << std::endl ; 
-            }
+            } 
 
 
             // TODO: fix this in CSGNode 
@@ -978,10 +988,7 @@ CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
             unsigned c_tranIdx2 = cnd.gtransformIdx() ; 
 
             bool match = c_tranIdx2 == c_tranIdx ;  
-            if(!match)
-            {
-                std::cout << "set/get transform fail c_tranIdx " << c_tranIdx << " c_tranIdx2 " << c_tranIdx2 << std::endl ; 
-            }
+            if(!match) std::cout << "set/get transform fail c_tranIdx " << c_tranIdx << " c_tranIdx2 " << c_tranIdx2 << std::endl ; 
             assert(match); 
 
 
