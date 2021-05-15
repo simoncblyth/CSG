@@ -3,10 +3,11 @@
 bin=CSGDemoTest 
 
 #geometry=parade
-geometry=sphere_containing_grid_of_spheres
+#geometry=sphere_containing_grid_of_spheres
 #geometry=layered_sphere
 #geometry=layered_zsphere
 #geometry=clustered_sphere
+geometry=scaled_box3
 #geometry=sphe
 #geometry=zsph
 #geometry=cone
@@ -71,7 +72,7 @@ mkdir -p $cfdir
 vars="bin GEOMETRY CLUSTERSPEC CLUSTERUNIT GRIDMODULO GRIDSINGLE GRIDSPEC GRIDSCALE LAYERS CFBASE cfdir"
 for var in $vars ; do printf "%-20s : %s \n" $var ${!var} ; done
 
-$bin $* 
+$GDB $bin $* 
 [ $? -ne 0 ] && exit 1 
 
 echo ls -l $cfdir/

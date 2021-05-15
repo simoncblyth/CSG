@@ -936,7 +936,47 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
     return so ; 
 }
 
-CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, int j0, int j1, int js, int k0, int k1, int ks, double unit, bool inbox ) 
+
+CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned layers )
+{
+    std::vector<float> scales ;
+    for(unsigned i=0 ; i < layers ; i++) scales.push_back(outer_scale*float(layers-i)/float(layers)) ; 
+
+    unsigned numPrim = layers ; 
+    CSGSolid* so = addSolid(numPrim, label); 
+    AABB bb = {} ; 
+
+    for(unsigned i=0 ; i < numPrim ; i++)
+    {
+        unsigned numNode = 1 ; 
+        CSGPrim* prim = addPrim(numNode); 
+        CSGNode* node = addNode(CSGNode::Make(label)) ;
+    
+        float scale = scales[i]; 
+
+        const Tran<double>* tran_scale = Tran<double>::make_scale( double(scale), double(scale), double(scale) ); 
+        unsigned transform_idx = 1 + addTran(*tran_scale);      // 1-based idx, 0 meaning None
+
+        node->setTransform(transform_idx); 
+        const qat4* tr = getTran(transform_idx-1u) ; 
+
+        tr->transform_aabb_inplace( node->AABB() ); 
+
+        bb.include_aabb( node->AABB() ); 
+
+        prim->setSbtIndexOffset(i) ;  //  assuming no other GAS
+        prim->setAABB( node->AABB() ); 
+    }
+
+    so->center_extent = bb.center_extent() ;  
+    LOG(info) << " so->center_extent " << so->center_extent ; 
+    return so ; 
+}
+
+
+
+
+CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, int j0, int j1, int js, int k0, int k1, int ks, double unit, bool inbox ) 
 {
     unsigned numPrim = inbox ? 1 : 0 ; 
     for(int i=i0 ; i < i1 ; i+=is ) 
@@ -948,12 +988,12 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
     }
        
     LOG(info) 
-        << " name " << name  
+        << " label " << label  
         << " numPrim " << numPrim 
         << " inbox " << inbox
         ;  
 
-    CSGSolid* so = addSolid(numPrim, name);
+    CSGSolid* so = addSolid(numPrim, label);
     unsigned idx = 0 ; 
 
     AABB bb = {} ; 
@@ -964,7 +1004,7 @@ CSGSolid* CSGFoundry::makeClustered(const char* name,  int i0, int i1, int is, i
     {
         unsigned numNode = 1 ; 
         CSGPrim* p = addPrim(numNode); 
-        CSGNode* n = addNode(CSGNode::Make(name)) ;
+        CSGNode* n = addNode(CSGNode::Make(label)) ;
     
         const Tran<double>* translate = Tran<double>::make_translate( double(i)*unit, double(j)*unit, double(k)*unit ); 
         unsigned transform_idx = 1 + addTran(*translate);      // 1-based idx, 0 meaning None

@@ -30,6 +30,7 @@ void DemoGeo::init()
     LOG(info) << "[" ; 
 
     const char* geometry = SSys::getenvvar("GEOMETRY", "parade" ); 
+    float outer = SSys::getenvint("OUTER", 100.f ) ; 
     int layers = SSys::getenvint("LAYERS", 1) ; 
 
     LOG(info) << " geometry " << geometry << " layers " << layers ;    
@@ -46,13 +47,13 @@ void DemoGeo::init()
     {
         init_clustered( geometry + strlen("clustered_")); 
     }
-    else if(strcmp(geometry, "layered_sphere") == 0 )
+    else if(SStr::StartsWith(geometry, "scaled_"))
     {
-        init_layered("sphere", layers);
+        init_scaled( geometry + strlen("scaled_"), outer, layers ); 
     }
-    else if(strcmp(geometry, "layered_zsphere") == 0 )
+    else if(SStr::StartsWith(geometry, "layered_"))
     {
-        init_layered("zsphere", layers);
+        init_layered( geometry + strlen("layered_"), outer, layers ); 
     }
     else
     {
@@ -134,9 +135,27 @@ void DemoGeo::init_clustered(const char* name)
     addInstance(gas_idx);  
 }
 
-void DemoGeo::init_layered(const char* name, unsigned layers)
+void DemoGeo::init_scaled(const char* name, float outer, unsigned layers)
 {
-    CSGSolid* so = foundry->makeLayered(name, 100.f, layers ); 
+    CSGSolid* so = foundry->makeScaled(name, outer, layers ); 
+    LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
+
+    unsigned gas_idx = 0 ; 
+    addInstance(gas_idx);  
+}
+
+void DemoGeo::init_layered(const char* name, float outer, unsigned layers)
+{
+    CSGSolid* so = foundry->makeLayered(name, outer, layers ); 
+    LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
+
+    unsigned gas_idx = 0 ; 
+    addInstance(gas_idx);  
+}
+
+void DemoGeo::init(const char* name)
+{
+    CSGSolid* so = foundry->make(name) ; 
     LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
 
     unsigned gas_idx = 0 ; 
@@ -150,15 +169,6 @@ void DemoGeo::addInstance(unsigned gas_idx)
     qat4 q  ; 
     q.setIdentity( ins_idx, gas_idx, ias_idx ); 
     foundry->inst.push_back( q ); 
-}
-
-void DemoGeo::init(const char* name)
-{
-    CSGSolid* so = foundry->make(name) ; 
-    LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
-
-    unsigned gas_idx = 0 ; 
-    addInstance(gas_idx);  
 }
 
 std::string DemoGeo::desc() const

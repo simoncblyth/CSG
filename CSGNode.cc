@@ -8,6 +8,8 @@
 
 #include "sutil_vec_math.h"
 #include "OpticksCSG.h"
+#include "PLOG.hh"
+
 #include "CSGNode.h"
 
 
@@ -343,11 +345,12 @@ CSGNode CSGNode::Make(const char* name) // static
     if(strncmp(name, "zsph", 4) == 0) return CSGNode::ZSphere(100.f, -50.f, 50.f) ; 
     if(strncmp(name, "cone", 4) == 0) return CSGNode::Cone(150.f, -150.f, 50.f, -50.f) ; 
     if(strncmp(name, "hype", 4) == 0) return CSGNode::Hyperboloid(100.f, 50.f, -50.f, 50.f) ; 
-    if(strncmp(name, "box3", 4) == 0) return CSGNode::Box3(50.f, 100.f, 150.f) ; 
+    if(strncmp(name, "box3", 4) == 0) return CSGNode::Box3(100.f, 100.f, 100.f) ; 
     if(strncmp(name, "plan", 4) == 0) return CSGNode::Plane(1.f, 0.f, 0.f, 0.f) ; 
     if(strncmp(name, "slab", 4) == 0) return CSGNode::Slab(1.f, 0.f, 0.f, -10.f, 10.f ) ; 
     if(strncmp(name, "cyli", 4) == 0) return CSGNode::Cylinder(0.f, 0.f, 100.f, -50.f, 50.f ) ; 
     if(strncmp(name, "disc", 4) == 0) return CSGNode::Disc(    0.f, 0.f, 50.f, 100.f, -2.f, 2.f ) ; 
+    LOG(fatal) << " not implemented for name " << name ; 
     assert(0); 
     return CSGNode::Sphere(1.0); 
 }

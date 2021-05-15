@@ -136,6 +136,7 @@ struct CSGFoundry
 
     CSGSolid* make(const char* name); 
     CSGSolid* makeLayered( const char* label, float outer_radius, unsigned layers ) ;
+    CSGSolid* makeScaled(const char* label, float outer_scale, unsigned layers );
     CSGSolid* makeClustered(const char* name,  int i0, int i1, int is, int j0, int j1, int js, int k0, int k1, int ks, double unit, bool inbox ) ;
 
     CSGSolid* makeSolid11(const char* label, CSGNode nd, const std::vector<float4>* pl=nullptr, int meshIdx=-1 );
