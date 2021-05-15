@@ -775,7 +775,7 @@ When reusing preexisting nodes, provide a nodeOffset_ argument > -1
 
 **/
 
-CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx, int nodeOffset_ )  
+CSGPrim* CSGFoundry::addPrim(int num_node, int nodeOffset_ )  
 {
     CSGPrim pr = {} ;
     pr.setNumNode(num_node) ; 
@@ -786,8 +786,8 @@ CSGPrim* CSGFoundry::addPrim(int num_node, int meshIdx, int nodeOffset_ )
     pr.setTranOffset(tran.size());  // HMM are these used ?
     pr.setPlanOffset(plan.size()); 
 
-    pr.setSbtIndexOffset(0) ;  // ?  THIS NEEDS TO BE OVERRIDDEN BY CALLER
-    pr.setMeshIdx(meshIdx) ; 
+    pr.setSbtIndexOffset(0) ;  // THIS MUST BE OVERRIDDEN BY CALLER
+    pr.setMeshIdx(-1) ;        // metadata, that may be set by caller 
 
     unsigned primIdx = prim.size(); 
     assert( primIdx < IMAX ); 
@@ -861,18 +861,49 @@ set from this argument.
 CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffset_ )
 {
     unsigned idx = solid.size(); 
+
     assert( idx < IMAX ); 
 
     int primOffset = primOffset_ < 0 ? prim.size() : primOffset_ ;
 
     CSGSolid so = CSGSolid::Make( label, numPrim , primOffset ); 
 
- 
-    so.center_extent = make_float4(0.f, 0.f, 0.f, 0.f) ;  // changed later 
-
     solid.push_back(so); 
+
     return solid.data() + idx  ; 
 }
+
+
+
+
+CSGSolid* CSGFoundry::addDeepCopySolid(unsigned solidIdx, const char* label)
+{
+    const CSGSolid* oso = getSolid(solidIdx); 
+
+    unsigned numPrim = oso->numPrim ; 
+
+    CSGSolid* cso = addSolid(numPrim, label); 
+    cso->type = oso->type ; 
+
+    for(unsigned primIdx=oso->primOffset ; primIdx < oso->primOffset+oso->numPrim ; primIdx++)
+    {
+        const CSGPrim* opr = prim.data() + primIdx ; 
+
+        for(unsigned nodeIdx=opr->nodeOffset() ; nodeIdx < opr->nodeOffset()+opr->numNode() ; nodeIdx++)
+        {
+            const CSGNode* nd = node.data() + nodeIdx ; 
+
+
+
+        }
+    } 
+
+
+    return cso ; 
+}
+
+
+
 
 
 
@@ -912,7 +943,9 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
     for(unsigned i=0 ; i < numPrim ; i++)
     {
         unsigned numNode = 1 ; 
-        CSGPrim* p = addPrim(numNode); 
+        int nodeOffset_ = -1 ; 
+        CSGPrim* p = addPrim(numNode, nodeOffset_ );
+ 
         float radius = radii[i]; 
 
         CSGNode* n = nullptr ; 
@@ -949,7 +982,8 @@ CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned 
     for(unsigned i=0 ; i < numPrim ; i++)
     {
         unsigned numNode = 1 ; 
-        CSGPrim* prim = addPrim(numNode); 
+        int nodeOffset_ = -1; 
+        CSGPrim* prim = addPrim(numNode, nodeOffset_); 
         CSGNode* node = addNode(CSGNode::Make(label)) ;
     
         float scale = scales[i]; 
@@ -972,6 +1006,7 @@ CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned 
     LOG(info) << " so->center_extent " << so->center_extent ; 
     return so ; 
 }
+
 
 
 
@@ -1003,7 +1038,8 @@ CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, 
     for(int k=k0 ; k < k1 ; k+=ks ) 
     {
         unsigned numNode = 1 ; 
-        CSGPrim* p = addPrim(numNode); 
+        int nodeOffset_ = -1 ;  // -1:use current node count as about to add the declared numNode
+        CSGPrim* p = addPrim(numNode, nodeOffset_); 
         CSGNode* n = addNode(CSGNode::Make(label)) ;
     
         const Tran<double>* translate = Tran<double>::make_translate( double(i)*unit, double(j)*unit, double(k)*unit ); 
@@ -1035,7 +1071,9 @@ CSGSolid* CSGFoundry::makeClustered(const char* label,  int i0, int i1, int is, 
         unsigned transform_idx = 1 + addTran(*to_center);  // 1-based idx, 0 meaning None
         const qat4* t = getTran(transform_idx-1u) ; 
 
-        CSGPrim* p = addPrim(1); 
+        unsigned numNode = 1 ; 
+        int nodeOffset_ = -1 ;  // -1:use current node count as about to add the declared numNode
+        CSGPrim* p = addPrim(numNode, nodeOffset_ ); 
         CSGNode bx = CSGNode::Box3(fullside) ;
         CSGNode* n = addNode(CSGNode::Box3(fullside)); 
         n->setTransform(transform_idx); 
@@ -1079,7 +1117,10 @@ CSGSolid* CSGFoundry::makeSolid11(const char* label, CSGNode nd, const std::vect
     CSGSolid* so = addSolid(numPrim, label);
 
     unsigned numNode = 1 ; 
-    CSGPrim* p = addPrim(numNode, meshIdx); 
+    int nodeOffset_ = -1 ;  
+    CSGPrim* p = addPrim(numNode, nodeOffset_); 
+    p->setMeshIdx(meshIdx); 
+
     CSGNode* n = addNode(nd, pl ); 
     p->setAABB( n->AABB() ); 
 
@@ -1104,7 +1145,9 @@ CSGSolid* CSGFoundry::makeBooleanBoxSphere( const char* label, char op_, float r
     CSGSolid* so = addSolid(numPrim, label);
 
     unsigned numNode = 3 ; 
-    CSGPrim* p = addPrim(numNode, meshIdx); 
+    int nodeOffset_ = -1 ; 
+    CSGPrim* p = addPrim(numNode, nodeOffset_ ); 
+    p->setMeshIdx(meshIdx); 
 
     addNode(op); 
     addNode(bx); 
@@ -1160,6 +1203,7 @@ CSGSolid* CSGFoundry::makeEllipsoid(  const char* label, float rx, float ry, flo
     nd.setTransform(idx); 
     return makeSolid11(label, nd, nullptr, ELLI_MIDX ); 
 }
+
 
 
 
