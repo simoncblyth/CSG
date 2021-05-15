@@ -76,6 +76,8 @@ list(APPEND CSG_HEADERS
     CSGScan.h
     CSGView.h
     CSGEnum.h
+
+    CSG_LOG.hh 
 )
 
 list(APPEND INTERSECT_HEADERS
@@ -115,6 +117,8 @@ target_include_directories(${name}
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+target_compile_definitions( ${name} PUBLIC OPTICKS_CSG )
 
 add_subdirectory(tests)
 

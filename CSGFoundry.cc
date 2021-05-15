@@ -1539,8 +1539,9 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
         unsigned ni = a->shape[0] ; 
         unsigned nj = a->shape[1] ; 
         unsigned nk = a->shape[2] ; 
-        std::cout  << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name << std::endl ; 
 
+        //std::cout  << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name << std::endl ; 
+        LOG(info) << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name ; 
         //LOG(LEVEL) << " ni " << std::setw(5) << ni << " nj " << std::setw(1) << nj << " nk " << std::setw(1) << nk << " " << dir <<  "/" << name ; 
 
         vec.clear(); 
