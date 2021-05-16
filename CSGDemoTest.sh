@@ -57,6 +57,7 @@ layers=7
 #layers=20
 
 numgas=2
+#numgas=5
 
 
 # make sensitive to calling environment

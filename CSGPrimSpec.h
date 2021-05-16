@@ -5,10 +5,21 @@
 #include <vector>
 #endif
 
+/**
+CSGPrimSpec
+=============
+
+Previously assumed that the *sbtIndexOffset* indices 
+were global to the entire geometry, but the 2nd-GAS-last-prim-only bug 
+suggests that the indices need to be local to each GAS, counting 
+from 0 to numPrim-1 for that GAS.
+
+**/
+
 struct CSGPrimSpec
 {
     const float*    aabb ; 
-    const unsigned* sbtIndexOffset ;  
+    const unsigned* sbtIndexOffset ;   
     unsigned        num_prim ; 
     unsigned        stride_in_bytes ; 
     bool            device ; 

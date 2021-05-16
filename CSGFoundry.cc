@@ -35,7 +35,8 @@ CSGFoundry::CSGFoundry()
     d_itra(nullptr),
     id(new CSGName(this)),
     target(new CSGTarget(this)),
-    deepcopy_everynode_transform(true)
+    deepcopy_everynode_transform(true),
+    last_added_solid(nullptr)
 {
     init(); 
 }
@@ -824,14 +825,35 @@ When reusing preexisting nodes, provide a nodeOffset_ argument > -1
 
 CSGPrim* CSGFoundry::addPrim(int num_node, int nodeOffset_ )  
 {
+    if(!last_added_solid) LOG(fatal) << "must addSolid prior to addPrim" ; 
+    assert( last_added_solid ); 
+
+    unsigned primOffset = last_added_solid->primOffset ; 
+    unsigned numPrim = last_added_solid->numPrim ; 
+
     unsigned globalPrimIdx = prim.size(); 
+    unsigned localPrimIdx = globalPrimIdx - primOffset ; 
+
+    bool in_range = localPrimIdx < numPrim ; 
+    if(!in_range) LOG(fatal) 
+        << " TOO MANY addPrim FOR SOLID " 
+        << " localPrimIdx " << localPrimIdx
+        << " numPrim " << numPrim
+        << " globalPrimIdx " << globalPrimIdx
+        << " (must addPrim only up to to the declared numPrim from the addSolid call) "
+        ;
+           
+    assert( in_range ); 
+
     int nodeOffset = nodeOffset_ < 0 ? int(node.size()) : nodeOffset_ ; 
 
     CSGPrim pr = {} ;
 
     pr.setNumNode(num_node) ; 
     pr.setNodeOffset(nodeOffset); 
-    pr.setSbtIndexOffset(globalPrimIdx) ; 
+    //pr.setSbtIndexOffset(globalPrimIdx) ;  // <--- bug ?
+    pr.setSbtIndexOffset(localPrimIdx) ; 
+
     pr.setMeshIdx(-1) ;                // metadata, that may be set by caller 
 
     pr.setTranOffset(tran.size());     // HMM are tranOffset and planOffset used now that use global referencing  ?
@@ -917,7 +939,11 @@ CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffs
 
     solid.push_back(so); 
 
-    return solid.data() + idx  ; 
+    CSGSolid* added_solid = solid.data() + idx  ; 
+
+    last_added_solid = added_solid ;  // for getting the solid local primIdx  
+ 
+    return added_solid ;  
 }
 
 
