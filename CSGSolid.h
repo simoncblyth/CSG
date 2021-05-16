@@ -27,9 +27,6 @@ struct CSGSolid   // Composite shape
     float4      center_extent ; 
 
     int         type = STANDARD_SOLID ;       
-    int         origin_solidIdx  ;   // these are used to identify extra debugging solids 
-    int         origin_primIdxRel ; 
-    int         origin_nodeIdxRel ; 
 
 
 #if defined(__CUDACC__) || defined(__CUDABE__)

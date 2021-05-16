@@ -83,6 +83,8 @@ struct CSGFoundry
     float4 iasCE(unsigned ias_idx_, unsigned long long emm=0ull ) const;
     void   iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm=0ull ) const;
     void   gasCE(float4& ce, unsigned gas_idx ) const ;
+    void   gasCE(float4& ce, const std::vector<unsigned>& gas_idxs ) const ; 
+
     float  getMaxExtent(const std::vector<unsigned>& solid_selection) const ;
     std::string descSolids(const std::vector<unsigned>& solid_selection) const ;
 
@@ -205,6 +207,10 @@ struct CSGFoundry
     // id 
     void parseMOI(int& midx, int& mord, int& iidx, const char* moi) const ; 
     const char* getName(unsigned midx) const ;  
+
+
+    void kludgeScalePrimBBox( const char* label, float dscale );
+    void kludgeScalePrimBBox( unsigned solidIdx, float dscale );
 
 
     std::vector<std::string> name ;  // meshNames from GGeo/GMeshLib (G4VSolid names from Geant4)

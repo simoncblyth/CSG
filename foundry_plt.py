@@ -97,7 +97,7 @@ def plot_solid_bb(s, pnbb = True):
 
 if __name__ == '__main__':
     fd = Foundry()
-    args = sys.argv[1:] if len(sys.argv) > 1 else "d1 d2 d3 d4".split() 
+    args = sys.argv[1:] if len(sys.argv) > 1 else "r1 d1".split() 
     for arg in args:
         s = fd[arg]
         plot_solid_bb(s)

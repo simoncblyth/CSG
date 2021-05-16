@@ -111,6 +111,7 @@ std::string CSGFoundry::desc() const
     unsigned num_oneprim  = getNumSolid(ONE_PRIM_SOLID); 
     unsigned num_onenode  = getNumSolid(ONE_NODE_SOLID); 
     unsigned num_deepcopy = getNumSolid(DEEP_COPY_SOLID); 
+    unsigned num_kludgebbox = getNumSolid(KLUDGE_BBOX_SOLID); 
 
     std::stringstream ss ; 
     ss << "CSGFoundry "
@@ -119,6 +120,7 @@ std::string CSGFoundry::desc() const
        << " ONE_PRIM " << num_oneprim
        << " ONE_NODE " << num_onenode
        << " DEEP_COPY " << num_deepcopy
+       << " KLUDGE_BBOX " << num_kludgebbox
        << " num_prim " << prim.size()
        << " num_node " << node.size()
        << " num_plan " << plan.size()
@@ -318,6 +320,24 @@ void CSGFoundry::gasCE(float4& ce, unsigned gas_idx ) const
     ce.z = so->center_extent.z ; 
     ce.w = so->center_extent.w ; 
 }
+
+void CSGFoundry::gasCE(float4& ce, const std::vector<unsigned>& gas_idxs ) const
+{
+    unsigned middle = gas_idxs.size()/2 ;  // target the middle selected solid : what about even ?
+    unsigned gas_idx = gas_idxs[middle]; 
+
+    const CSGSolid* so = getSolid(gas_idx); 
+    ce.x = so->center_extent.x ; 
+    ce.y = so->center_extent.y ; 
+    ce.z = so->center_extent.z ; 
+    ce.w = so->center_extent.w ; 
+}
+
+
+
+
+
+
 
 void CSGFoundry::iasCE(float4& ce, unsigned ias_idx_, unsigned long long emm ) const
 {
@@ -1670,4 +1690,58 @@ int CSGFoundry::getCenterExtent(float4& ce, int midx, int mord, int iidx) const
     }
     return rc ; 
 }
+
+
+
+/**
+CSGFoundry::kludgeScalePrimBBox
+---------------------------------
+
+**/
+
+void CSGFoundry::kludgeScalePrimBBox( const char* label, float dscale )
+{
+    std::vector<unsigned> solidIdx ; 
+    findSolidIdx(solidIdx, label); 
+
+    for(int i=0 ; i < int(solidIdx.size()) ; i++)
+    {
+        unsigned soIdx = solidIdx[i]; 
+        kludgeScalePrimBBox( soIdx, dscale ); 
+    }
+}
+
+
+void CSGFoundry::kludgeScalePrimBBox( unsigned solidIdx, float dscale )
+{
+    CSGSolid* so = solid.data() + solidIdx ; 
+    so->type = KLUDGE_BBOX_SOLID ; 
+
+    unsigned primOffset = so->primOffset ;
+    unsigned numPrim = so->numPrim ; 
+
+    for(unsigned primIdx=0 ; primIdx < numPrim ; primIdx++)
+    {
+        // primIdx                :   0,1,2,3,...,numPrim-1 
+        // numPrim-1 - primIdx    :  numPrim-1, numPrim-1-1, numPrim-1-2, ... , 0          
+        // scale                  :  1+(numPrim-1)*dscale, 
+
+        float scale = 1.f + dscale*float(numPrim - 1u - primIdx) ;  
+        LOG(info) << " primIdx " << std::setw(2) << primIdx << " scale " << scale ; 
+        std::cout 
+            << "CSGFoundry::kludgeScalePrimBBox" 
+            << " primIdx " << std::setw(2) << primIdx 
+            << " numPrim " << std::setw(2) << numPrim
+            << " scale " << scale 
+            << std::endl 
+            ; 
+        CSGPrim* pr = prim.data() + primOffset + primIdx ;  // about to modify, so low level access 
+        pr->scaleAABB_(scale); 
+    } 
+}
+
+
+
+
+
 

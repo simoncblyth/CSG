@@ -37,14 +37,11 @@ std::string CSGSolid::desc() const
        << " ce " << center_extent
        ; 
 
-    if( type == ONE_PRIM_SOLID )
-    {
-       ss << " ONE_PRIM_SOLID "
-          << " origin_solidIdx " << origin_solidIdx 
-          << " origin_primIdxRel " << origin_primIdxRel 
-          << " origin_nodeIdxRel " << origin_nodeIdxRel 
-          ;
-    }
+    if( type == ONE_PRIM_SOLID ) ss << " ONE_PRIM_SOLID " ; 
+    if( type == ONE_NODE_SOLID ) ss << " ONE_NODE_SOLID " ; 
+    if( type == DEEP_COPY_SOLID ) ss << " DEEP_COPY_SOLID " ; 
+    if( type == KLUDGE_BBOX_SOLID ) ss << " KLUDGE_BBOX_SOLID " ; 
+
     std::string s = ss.str(); 
     return s ; 
 }

@@ -115,6 +115,12 @@ struct CSGPrim
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
+    void scaleAABB_( float scale )
+    {
+        float* aabb = AABB_(); 
+        for(int i=0 ; i < 6 ; i++ ) *(aabb+i) = *(aabb+i) * scale ; 
+    }
+
     static void Copy(CSGPrim& b, const CSGPrim& a)
     {
         b.q0.f.x = a.q0.f.x ; b.q0.f.y = a.q0.f.y ; b.q0.f.z = a.q0.f.z ; b.q0.f.w = a.q0.f.w ; 
