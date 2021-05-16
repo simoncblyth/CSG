@@ -32,6 +32,7 @@ void DemoGeo::init()
     const char* geometry = SSys::getenvvar("GEOMETRY", "parade" ); 
     float outer = SSys::getenvint("OUTER", 100.f ) ; 
     int layers = SSys::getenvint("LAYERS", 1) ; 
+    int numgas = SSys::getenvint("NUMGAS", 1) ; 
 
     LOG(info) << " geometry " << geometry << " layers " << layers ;    
 
@@ -49,7 +50,7 @@ void DemoGeo::init()
     }
     else if(SStr::StartsWith(geometry, "scaled_"))
     {
-        init_scaled( geometry + strlen("scaled_"), outer, layers ); 
+        init_scaled( geometry, geometry + strlen("scaled_"), outer, layers, numgas ); 
     }
     else if(SStr::StartsWith(geometry, "layered_"))
     {
@@ -135,13 +136,31 @@ void DemoGeo::init_clustered(const char* name)
     addInstance(gas_idx);  
 }
 
-void DemoGeo::init_scaled(const char* name, float outer, unsigned layers)
-{
-    CSGSolid* so = foundry->makeScaled(name, outer, layers ); 
-    LOG(info) << " name " << name << " so.center_extent " << so->center_extent ; 
 
-    unsigned gas_idx = 0 ; 
-    addInstance(gas_idx);  
+
+void DemoGeo::init_scaled(const char* solid_label_base, const char* demo_node_type, float outer, unsigned layers, unsigned num_gas )
+{
+    for(unsigned gas_idx=0 ; gas_idx < num_gas ; gas_idx++)
+    {
+         std::string label = CSGSolid::MakeLabel( solid_label_base, gas_idx );   
+
+        CSGSolid* so = foundry->makeScaled(label.c_str(), demo_node_type, outer, layers ); 
+        LOG(info)
+            << " gas_idx " << gas_idx 
+            << " label " << label 
+            << " demo_node_type " << demo_node_type
+            << " so.center_extent " << so->center_extent 
+            << " num_gas " << num_gas 
+            ; 
+
+        float4 ce = so->center_extent ; 
+
+        float tx = 0.f ; 
+        float ty = 3.f*ce.w*gas_idx ;
+        float tz = 0.f ;
+ 
+        addInstance(gas_idx, tx, ty, tz);  
+    }
 }
 
 void DemoGeo::init_layered(const char* name, float outer, unsigned layers)
@@ -162,12 +181,17 @@ void DemoGeo::init(const char* name)
     addInstance(gas_idx);  
 }
 
-void DemoGeo::addInstance(unsigned gas_idx)
+void DemoGeo::addInstance(unsigned gas_idx, float tx, float ty, float tz)
 {
     unsigned ias_idx = 0 ; 
     unsigned ins_idx = foundry->inst.size() ; // 0-based index within the DemoGrid
     qat4 q  ; 
     q.setIdentity( ins_idx, gas_idx, ias_idx ); 
+
+    q.q3.f.x = tx ; 
+    q.q3.f.y = ty ; 
+    q.q3.f.z = tz ; 
+
     foundry->inst.push_back( q ); 
 }
 

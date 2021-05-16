@@ -1,3 +1,12 @@
+/**
+
+This is typically invoked via the scripts::
+
+    ./make_demos.sh 
+    ./CSGDemoTest.sh    
+
+**/
+
 #include "SSys.hh"
 #include "OPTICKS_LOG.hh"
 

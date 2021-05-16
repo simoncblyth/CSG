@@ -52,8 +52,12 @@ gridscale=200.0
 # number of concentric layers in compound shapes
 #layers=1     
 #layers=2
-layers=3
+#layers=3
+layers=7
 #layers=20
+
+numgas=2
+
 
 # make sensitive to calling environment
 export GEOMETRY=${GEOMETRY:-$geometry}
@@ -64,6 +68,7 @@ export GRIDSINGLE=${GRIDSINGLE:-$gridsingle}
 export GRIDSPEC=${GRIDSPEC:-$gridspec}
 export GRIDSCALE=${GRIDSCALE:-$gridscale}
 export LAYERS=${LAYERS:-$layers}
+export NUMGAS=${NUMGAS:-$numgas}
 
 export CFBASE=/tmp/$USER/opticks/CSGDemoTest/$GEOMETRY
 cfdir=$CFBASE/CSGFoundry

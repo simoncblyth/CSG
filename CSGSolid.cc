@@ -27,10 +27,10 @@ CSGSolid CSGSolid::Make( const char* label_, int numPrim_, int primOffset_ )
 
 std::string CSGSolid::desc() const 
 {
-    std::string label8(label, 8); 
+    std::string label16(label, 16); 
     std::stringstream ss ; 
     ss << "CSGSolid " 
-       << std::setw(9) << label8.c_str()
+       << std::setw(16) << label16.c_str()
        << " primNum/Offset " 
        << std::setw(5) << numPrim 
        << std::setw(5) << primOffset
@@ -47,6 +47,16 @@ std::string CSGSolid::desc() const
 }
 
 
+
+std::string CSGSolid::MakeLabel(const char* typ0, unsigned idx0, char delim )
+{
+    std::stringstream ss ; 
+    ss << typ0 ; 
+    if(delim != '\0') ss << delim ; 
+    ss  << idx0 ; 
+    std::string s = ss.str();  
+    return s ; 
+}
 
 std::string CSGSolid::MakeLabel(char typ0, unsigned idx0 )
 {

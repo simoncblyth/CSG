@@ -1092,7 +1092,7 @@ CSGSolid* CSGFoundry::makeLayered(const char* label, float outer_radius, unsigne
 }
 
 
-CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned layers )
+CSGSolid* CSGFoundry::makeScaled(const char* label, const char* demo_node_type, float outer_scale, unsigned layers )
 {
     std::vector<float> scales ;
     for(unsigned i=0 ; i < layers ; i++) scales.push_back(outer_scale*float(layers-i)/float(layers)) ; 
@@ -1106,7 +1106,7 @@ CSGSolid* CSGFoundry::makeScaled(const char* label, float outer_scale, unsigned 
         unsigned numNode = 1 ; 
         int nodeOffset_ = -1; 
         CSGPrim* pr = addPrim(numNode, nodeOffset_); 
-        CSGNode* nd = addNode(CSGNode::MakeDemo(label)) ;
+        CSGNode* nd = addNode(CSGNode::MakeDemo(demo_node_type)) ;
     
         float scale = scales[i]; 
 
