@@ -234,9 +234,10 @@ struct CSGFoundry
     CSGName*    id ; 
     CSGTarget*  target ; 
     bool        deepcopy_everynode_transform ; 
+
     CSGSolid*   last_added_solid ; 
-
-
+    CSGPrim*    last_added_prim ; 
+    CSGNode*    last_added_node ; 
 
 };
 

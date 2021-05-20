@@ -36,7 +36,8 @@ CSGFoundry::CSGFoundry()
     id(new CSGName(this)),
     target(new CSGTarget(this)),
     deepcopy_everynode_transform(true),
-    last_added_solid(nullptr)
+    last_added_solid(nullptr),
+    last_added_prim(nullptr)
 {
     init(); 
 }
@@ -735,6 +736,37 @@ CSGFoundry::addNode
 
 CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
 {
+    if(!last_added_prim) LOG(fatal) << "must addPrim prior to addNode" ; 
+    assert( last_added_prim ); 
+
+    unsigned globalNodeIdx = node.size() ;  
+
+    unsigned nodeOffset = last_added_prim->nodeOffset(); 
+    unsigned numNode = last_added_prim->numNode(); 
+    unsigned localNodeIdx = globalNodeIdx - nodeOffset ; 
+
+    bool ok_localNodeIdx = localNodeIdx < numNode ; 
+    if(!ok_localNodeIdx) LOG(fatal) 
+        << " TOO MANY addNode FOR Prim " 
+        << " localNodeIdx " << localNodeIdx
+        << " numNode " << numNode
+        << " globalNodeIdx " << globalNodeIdx
+        << " (must addNode only up to the declared numNode from the addPrim call) "
+        ;
+    assert( ok_localNodeIdx  ); 
+
+    bool ok_globalNodeIdx = globalNodeIdx < IMAX  ;
+    if(!ok_globalNodeIdx)
+    {
+        LOG(fatal) 
+            << " FATAL : OUT OF RANGE "
+            << " globalNodeIdx " << globalNodeIdx 
+            << " IMAX " << IMAX
+            ;
+    }
+
+    assert( ok_globalNodeIdx ); 
+
     unsigned num_planes = pl ? pl->size() : 0 ; 
     if(num_planes > 0)
     {
@@ -744,21 +776,9 @@ CSGNode* CSGFoundry::addNode(CSGNode nd, const std::vector<float4>* pl )
         for(unsigned i=0 ; i < num_planes ; i++) addPlan((*pl)[i]);  
     }
 
-    unsigned idx = node.size() ;  
-
-    bool in_range = idx < IMAX  ;
-    if(!in_range)
-    {
-        LOG(fatal) 
-            << " FATAL : OUT OF RANGE "
-            << " idx " << idx 
-            << " IMAX " << IMAX
-            ;
-    }
-
-    assert( in_range ); 
     node.push_back(nd); 
-    return node.data() + idx ; 
+    last_added_node = node.data() + globalNodeIdx ;
+    return last_added_node ; 
 }
 
 float4* CSGFoundry::addPlan(const float4& pl )
@@ -862,7 +882,10 @@ CSGPrim* CSGFoundry::addPrim(int num_node, int nodeOffset_ )
     assert( globalPrimIdx < IMAX ); 
     prim.push_back(pr); 
 
-    return prim.data() + globalPrimIdx ; 
+    last_added_prim = prim.data() + globalPrimIdx ;
+    last_added_node = nullptr ; 
+
+    return last_added_prim  ; 
 }
 
 
@@ -939,11 +962,11 @@ CSGSolid* CSGFoundry::addSolid(unsigned numPrim, const char* label, int primOffs
 
     solid.push_back(so); 
 
-    CSGSolid* added_solid = solid.data() + idx  ; 
-
-    last_added_solid = added_solid ;  // for getting the solid local primIdx  
+    last_added_solid = solid.data() + idx  ;  // retain last_added_solid for getting the solid local primIdx 
+    last_added_prim = nullptr ; 
+    last_added_node = nullptr ; 
  
-    return added_solid ;  
+    return last_added_solid ;  
 }
 
 

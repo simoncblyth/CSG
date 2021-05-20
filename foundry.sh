@@ -1,6 +1,5 @@
 #!/bin/bash -l 
 
-#ipython -i foundry.py $* 
-ipython -i foundry_plt.py $* 
-
+${IPYTHON:-ipython} -i foundry.py $* 
+#${IPYTHON:-ipython} -i foundry_plt.py $* 
 

@@ -32,6 +32,7 @@ struct AABB
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
     std::string desc() const ; 
+    static std::string Desc(const float* data); 
     static void cube_corners(std::vector<float3>& corners, const float4& ce );
 #endif
 
@@ -217,6 +218,14 @@ AABB_METHOD std::string AABB::desc() const
         << " mn " << mn 
         << " mx " << mx  
         ; 
+    std::string s = ss.str(); 
+    return s ; 
+}
+
+AABB_METHOD std::string AABB::Desc(const float* data)
+{
+    std::stringstream ss ; 
+    for(int j=0 ; j < 6 ; j++) ss << std::fixed << std::setw(10) << std::setprecision(2) << *(data + j) << " " ; 
     std::string s = ss.str(); 
     return s ; 
 }

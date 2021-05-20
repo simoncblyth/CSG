@@ -2,23 +2,79 @@
 
 import os, sys, logging, codecs, numpy as np
 from opticks.sysrap.OpticksCSG import CSG_ as CSG 
+from complete_binary_tree import layout_tree
+
+
 log = logging.getLogger(__name__)
 
+class BB(object):
+    """
+
+                +--------+       
+                |        | 
+      z1  +--------+     | 
+          |     |  |     |
+          |     +--|-----+   y1  
+          |        |
+      z0  +--------+     y0
+         x0        x1
+    """
+    def __init__(self, bb=[-0.,-0.,-0.,0.,0.,0.]):
+        self.x0 = bb[0]
+        self.y0 = bb[1]
+        self.z0 = bb[2]
+        self.x1 = bb[3]
+        self.y1 = bb[4]
+        self.z1 = bb[5]
+        self.data = bb 
+
+    def __repr__(self):
+        fmt = "%10.3f "
+        fmt = fmt * 6 
+        return fmt % tuple(self.data)
+
+    def include(self, other):
+        if other.x0 < self.x0: self.x0 = other.x0
+        if other.y0 < self.y0: self.y0 = other.y0
+        if other.z0 < self.z0: self.z0 = other.z0
+
+        if other.x1 > self.x1: self.x1 = other.x1
+        if other.y1 > self.y1: self.y1 = other.y1
+        if other.z1 > self.z1: self.z1 = other.z1
+
+
+
+
 class Node(object):
+    """
+
+                                    1
+                      10                          11
+                100       101               110         111
+             1000 1001 1100 1101        1100 1101     1110 1111
+
+
+    """
     def __init__(self, item, fd):
         self.fd = fd 
         self.tc = item[3,2].view(np.int32)
-        self.ty = CSG.desc(self.tc)
-
+        self.tyd = CSG.desc(self.tc)
+        self.ty = self.tyd[:2]
+        self.idx = item[1,3].view(np.int32)
+        self.depth = len("{0:b}".format(self.idx+1)) - 1   # complete binary trees are very special  
         self.tref = item[3,3].view(np.int32) & 0x7fffffff 
         self.cm = bool(item[3,3].view(np.int32) & 0x8000000) 
-        self.bb = item[2:4].ravel()[:6]
+        self.bb = BB(item[2:4].ravel()[:6])
         self.pa = item[0:2].ravel()[:6]
         self.tr = self.fd.tran[self.tref-1] if self.tref > 0 else None
         self.it = self.fd.itra[self.tref-1] if self.tref > 0 else None
 
+        self.label = "%s%s%s" % (1+self.idx,"!" if self.cm else ":", self.ty) 
+
     def __repr__(self):
-        return "Node %10s tref:%5d cm:%1d bb %30s pa %30s " % (self.ty, self.tref, self.cm, str(self.bb), str(self.pa))   
+        return "Node %2d:%2s tref:%5d cm:%1d bb %30s pa %30s " % (1+self.idx, self.ty, self.tref, self.cm, str(self.bb), str(self.pa))   
+    def __str__(self):
+        return self.label
 
 
 class Prim(object):
@@ -26,8 +82,10 @@ class Prim(object):
         self.fd = fd 
         self.numNode = item[0,0].view(np.int32)
         self.nodeOffset = item[0,1].view(np.int32)
-        self.node = list(map(lambda item:Node(item, fd), self.fd.node[self.nodeOffset:self.nodeOffset+self.numNode]))
-        self.bb = item[2:4].ravel()[:6]
+        self.bb = BB(item[2:4].ravel()[:6])
+
+        levelorder = list(map(lambda item:Node(item, fd), self.fd.node[self.nodeOffset:self.nodeOffset+self.numNode]))
+        self.node = levelorder
 
     def __repr__(self):
         return "Prim %3d %5d %30s " % (self.numNode, self.nodeOffset, str(self.bb))   
@@ -41,16 +99,16 @@ class Prim(object):
 class Solid(object):
     @classmethod
     def DecodeLabel(cls, item):
-        return item.tobytes()[:8].split(b'\0')[0].decode("utf-8")     # TODO: test full 8 char label  
+        return item.tobytes()[:16].split(b'\0')[0].decode("utf-8")     # TODO: test full 8 char label  
 
     def __init__(self, item, fd):
         self.item = item  
         self.fd = fd 
         self.label = self.DecodeLabel(item)
-        self.numPrim = item[0,2].view(np.int32)
-        self.primOffset = item[0,3].view(np.int32)
+        self.numPrim = item[1,0].view(np.int32)
+        self.primOffset = item[1,1].view(np.int32)
         self.prim = list(map(lambda item:Prim(item, fd), self.fd.prim[self.primOffset:self.primOffset+self.numPrim]))
-        self.ce = item[1].view(np.float32)
+        self.ce = item[2].view(np.float32)
 
     def __repr__(self):
         return "Solid %10s : %4d %5d  ce %35s  "  % (self.label, self.numPrim, self.primOffset, str(self.ce))
@@ -132,14 +190,23 @@ class Foundry(object):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     fd = Foundry("$TMP/CSG_GGeo/CSGFoundry")
     print(repr(fd))
     #print(str(fd))
-    args = sys.argv[1:] if len(sys.argv) > 1 else "d1 d2 d3 d4".split()
+    args = sys.argv[1:] if len(sys.argv) > 1 else "r1".split()
     for arg in args: 
         obj = fd[arg] 
         print(arg)
         print(obj)
     pass
+
+
+    p = fd["r8/0"] 
+    print("\n".join(map(repr,p.node))) 
+
+    t = layout_tree(p.node)
+    print(t)
+
 
 

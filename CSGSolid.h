@@ -32,6 +32,8 @@ struct CSGSolid   // Composite shape
 
 #if defined(__CUDACC__) || defined(__CUDABE__)
 #else
+    bool labelMatch(const char* label) const ;  
+
     static CSGSolid Make( const char* label_, int numPrim_, int primOffset_=-1 ); 
     static std::string MakeLabel(const char* typ0, unsigned idx0, char delim='_' );  
     static std::string MakeLabel(char typ0, unsigned idx0 );  

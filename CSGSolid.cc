@@ -47,6 +47,11 @@ std::string CSGSolid::desc() const
 }
 
 
+bool CSGSolid::labelMatch(const char* label_) const 
+{
+    return strncmp(label, label_, sizeof(label)) == 0 ;
+}
+
 
 std::string CSGSolid::MakeLabel(const char* typ0, unsigned idx0, char delim )
 {
