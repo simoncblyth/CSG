@@ -44,6 +44,13 @@ class BB(object):
 
 
 
+class Tran(object):
+    def __init__(self, idx, tr, it):
+        self.idx = idx
+        self.tr = tr 
+        self.it = it 
+    def __repr__(self):
+        return "\n".join([str(self.idx), repr(self.tr)])
 
 class Node(object):
     """
@@ -63,16 +70,18 @@ class Node(object):
         self.idx = item[1,3].view(np.int32)
         self.depth = len("{0:b}".format(self.idx+1)) - 1   # complete binary trees are very special  
         self.tref = item[3,3].view(np.int32) & 0x7fffffff 
-        self.cm = bool(item[3,3].view(np.int32) & 0x8000000) 
+        self.tidx = self.tref - 1
+        self.cm = bool(item[3,3].view(np.uint32) & 0x80000000 >> 31) 
         self.bb = BB(item[2:4].ravel()[:6])
         self.pa = item[0:2].ravel()[:6]
-        self.tr = self.fd.tran[self.tref-1] if self.tref > 0 else None
-        self.it = self.fd.itra[self.tref-1] if self.tref > 0 else None
-
-        self.label = "%s%s%s" % (1+self.idx,"!" if self.cm else ":", self.ty) 
+        self.tr = self.fd.tran[self.tidx] if self.tref > 0 else None
+        self.it = self.fd.itra[self.tidx] if self.tref > 0 else None
+        self.tran = Tran(self.tidx, self.tr, self.it) if self.tidx > -1 else None
+        self.scm = "!" if self.cm else ":"
+        self.label = "%s%s%s" % (1+self.idx,self.scm, self.ty) 
 
     def __repr__(self):
-        return "Node %2d:%2s tref:%5d cm:%1d bb %30s pa %30s " % (1+self.idx, self.ty, self.tref, self.cm, str(self.bb), str(self.pa))   
+        return "Node %2d%s%2s tidx:%5d cm:%1d bb %30s pa %30s " % (1+self.idx,self.scm,self.ty, self.tidx, self.cm, str(self.bb), str(self.pa))   
     def __str__(self):
         return self.label
 
@@ -84,14 +93,19 @@ class Prim(object):
         self.nodeOffset = item[0,1].view(np.int32)
         self.bb = BB(item[2:4].ravel()[:6])
 
+        self.midx = item[1,1].view(np.uint32)
+        self.ridx = item[1,2].view(np.uint32)
+        self.pidx = item[1,3].view(np.uint32)
+        self.mname = self.fd.getName(self.midx)
+
         levelorder = list(map(lambda item:Node(item, fd), self.fd.node[self.nodeOffset:self.nodeOffset+self.numNode]))
         self.node = levelorder
 
     def __repr__(self):
-        return "Prim %3d %5d %30s " % (self.numNode, self.nodeOffset, str(self.bb))   
+        return "Prim %3d %5d %30s : %s" % (self.numNode, self.nodeOffset, str(self.bb), self.mname)   
 
     def __str__(self):
-        return "\n".join([repr(self)]+list(map(repr, self.node)))
+        return "\n".join([repr(self)]+list(map(repr, self.node))+list(map(lambda n:repr(n.tran), self.node)))
 
     def __getitem__(self, nodeIdx):
         return self.node[nodeIdx]
@@ -141,8 +155,27 @@ class Foundry(object):
     def __str__(self):
         return "\n".join(["Foundry"]+ list(map(repr, self.solids)))
 
+    def getName(self, midx):
+        return self.name[midx]
+
     def index(self, solid_label):
         return self.label.index(solid_label) 
+
+    def gt(self):
+        return self.node.view(np.int32)[:,3,3] & 0x7fffffff  
+    def cm(self):
+        return (self.node.view(np.int32)[:,3,3] & 0x80000000) >> 31     # complemented node
+
+
+    def midx(self):
+        return self.prim.view(np.uint32)[:,1,1]  
+    def ridx(self):
+        return self.prim.view(np.uint32)[:,1,2]  
+    def pidx(self):
+        return self.prim.view(np.uint32)[:,1,3]  
+
+
+
 
     def __getitem__(self, arg):
         """
@@ -194,19 +227,33 @@ if __name__ == '__main__':
     fd = Foundry("$TMP/CSG_GGeo/CSGFoundry")
     print(repr(fd))
     #print(str(fd))
-    args = sys.argv[1:] if len(sys.argv) > 1 else "r1".split()
+    args = sys.argv[1:] if len(sys.argv) > 1 else "r8/0".split()
+
+    p = None
+    n = None
+    s = None
+
     for arg in args: 
         obj = fd[arg] 
         print(arg)
         print(obj)
+
+        if type(obj) is Prim:
+            p = obj
+        elif type(obj) is Node:
+            n = obj
+        elif type(obj) is Solid:
+            s = obj
+        else:
+            pass
+        pass
     pass
 
-
-    p = fd["r8/0"] 
-    print("\n".join(map(repr,p.node))) 
-
-    t = layout_tree(p.node)
-    print(t)
-
-
+    if not p is None: 
+        #print("\n".join(map(repr,p.node))) 
+        t = layout_tree(p.node)
+        print("layout_tree")
+        print(t)
+    pass
+       
 
