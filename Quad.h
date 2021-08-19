@@ -1,5 +1,7 @@
 #pragma once
 
+// below also in sysrap scuda.h : TODO: eliminate this
+
 union quad
 {
    float4 f ; 

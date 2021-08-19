@@ -37,7 +37,9 @@ CSGFoundry::CSGFoundry()
     target(new CSGTarget(this)),
     deepcopy_everynode_transform(true),
     last_added_solid(nullptr),
-    last_added_prim(nullptr)
+    last_added_prim(nullptr),
+    bnd(nullptr),
+    icdf(nullptr)
 {
     init(); 
 }
@@ -1558,6 +1560,9 @@ void CSGFoundry::write(const char* dir) const
     if(tran.size() > 0 ) NP::Write(dir, "tran.npy",   (float*)tran.data(), tran.size(),   4, 4 ); 
     if(itra.size() > 0 ) NP::Write(dir, "itra.npy",   (float*)itra.data(), itra.size(),   4, 4 ); 
     if(inst.size() > 0 ) NP::Write(dir, "inst.npy",   (float*)inst.data(), inst.size(),   4, 4 ); 
+
+    if(bnd)  bnd->save(dir,  "bnd.npy") ; 
+    if(icdf) icdf->save(dir, "icdf.npy") ; 
 }
 
 void CSGFoundry::load( const char* dir_ )
@@ -1574,6 +1579,9 @@ void CSGFoundry::load( const char* dir_ )
     loadArray( itra  , dir, "itra.npy" ); 
     loadArray( inst  , dir, "inst.npy" ); 
     loadArray( plan  , dir, "plan.npy" );  // often there are no planes in the geometry 
+
+    bnd = NP::Load(dir, "bnd.npy"); 
+    icdf = NP::Load(dir, "icdf.npy"); 
 }
 
 
@@ -1605,7 +1613,8 @@ void CSGFoundry::loadArray( std::vector<T>& vec, const char* dir, const char* na
 {
     NP* a = NP::Load(dir, name);
     bool quiet = false ; 
-    if(a == nullptr)
+    //if(a == nullptr && strcmp(name, "plan.npy") != 0)   // dont complain about lack of planes, many geometries do not have them 
+    if(a == nullptr)   // dont complain about lack of planes, many geometries do not have them 
     { 
         LOG(LEVEL) << "FAIL for " << dir <<  "/" << name ; 
     }

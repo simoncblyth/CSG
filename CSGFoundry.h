@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "plog/Severity.h"
 
+struct NP ; 
 struct CSGName ; 
 struct CSGTarget ; 
 
@@ -238,6 +239,11 @@ struct CSGFoundry
     CSGSolid*   last_added_solid ; 
     CSGPrim*    last_added_prim ; 
     CSGNode*    last_added_node ; 
+
+
+    NP* bnd ; 
+    NP* icdf ; 
+
 
 };
 

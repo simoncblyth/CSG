@@ -2,12 +2,12 @@
 
 bin=CSGDemoTest 
 
-#geometry=parade
+geometry=parade
 #geometry=sphere_containing_grid_of_spheres
 #geometry=layered_sphere
 #geometry=layered_zsphere
 #geometry=clustered_sphere
-geometry=scaled_box3
+#geometry=scaled_box3
 #geometry=sphe
 #geometry=zsph
 #geometry=cone
